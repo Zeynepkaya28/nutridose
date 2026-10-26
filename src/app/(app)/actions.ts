@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
+import { createAdminClient } from "@/lib/supabase/server";
+import { deleteAccount } from "@/server/account";
 import { isConditionCode } from "@/domain/types";
 import { SupabaseCatalogRepository } from "@/infra/SupabaseCatalogRepository";
 import { AnalyzeRequestSchema } from "@/lib/api/analyze";
@@ -178,4 +181,37 @@ export async function signOut(): Promise<void> {
   const viewer = await requireViewer();
   await viewer?.supabase.auth.signOut();
   revalidatePath("/", "layout");
+  redirect("/giris");
+}
+
+/** Deletes the account and all its data, then signs out. */
+export async function deleteMyAccount(): Promise<ActionResult> {
+  const viewer = await requireViewer();
+  if (!viewer) return { ok: false, error: MESSAGES.unauthenticated };
+  try {
+    await deleteAccount(viewer.supabase, createAdminClient(), viewer.userId);
+  } catch (error) {
+    createLogger({ action: "deleteMyAccount", userId: viewer.userId }).error("account deletion failed", { error });
+    return { ok: false, error: "Hesap silinemedi. Lütfen tekrar deneyin; sorun sürerse bize yazın." };
+  }
+  // The session belongs to a deleted user now; clear the cookies locally.
+  await viewer.supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+  revalidatePath("/", "layout");
+  redirect("/giris?silindi=1");
+}
+
+/** Marks onboarding as finished. */
+export async function completeOnboarding(): Promise<void> {
+  const viewer = await requireViewer();
+  if (!viewer) redirect("/giris");
+  const { error } = await viewer.supabase
+    .from("profiles")
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq("user_id", viewer.userId);
+  if (error) {
+    createLogger({ action: "completeOnboarding" }).error("update failed", { error });
+    redirect("/hosgeldin?adim=3&hata=1");
+  }
+  revalidatePath("/", "layout");
+  redirect("/");
 }

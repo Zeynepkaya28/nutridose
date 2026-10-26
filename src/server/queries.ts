@@ -15,6 +15,18 @@ export const getViewer = cache(async () => {
 
 export type Viewer = NonNullable<Awaited<ReturnType<typeof getViewer>>>;
 
+/** Onboarding state of the signed-in user. Cached per request. */
+export const getAccountState = cache(async (viewer: Viewer) => {
+  const { data, error } = await viewer.supabase
+    .from("profiles")
+    .select("display_name, onboarded_at")
+    .eq("user_id", viewer.userId)
+    .maybeSingle();
+  if (error) throw new Error(`profiles: ${error.message}`);
+  // No profile row: the account was deleted while this session token was still valid.
+  return { exists: Boolean(data), displayName: data?.display_name ?? null, onboarded: Boolean(data?.onboarded_at) };
+});
+
 function check<T>(result: { data: T | null; error: { message: string } | null }, what: string): T {
   if (result.error) throw new Error(`${what}: ${result.error.message}`);
   return result.data as T;

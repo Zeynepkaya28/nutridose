@@ -81,6 +81,20 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## Kimlik doğrulama ve profil (Faz 5)
+
+- **E-posta magic link** (`/giris`): `signInWithOtp` → e-postadaki bağlantı → `/auth/callback` (PKCE kodu veya token hash) → oturum çerezi. Yerelde e-postalar Mailpit'e düşer: http://127.0.0.1:55324
+- **Sign in with Apple**: kod hazır (`signInWithApple`), ancak bir Apple Developer hesabı gerektirir. Açmak için: Apple'da Services ID + Sign in with Apple anahtarı oluşturun → Supabase Dashboard › Authentication › Providers › Apple'a girin (yerelde `SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID` / `_SECRET` ve `config.toml`'da `enabled = true`) → Vercel'de `NEXT_PUBLIC_APPLE_SIGNIN_ENABLED=true`. Bu değişken yoksa düğme gösterilmez.
+- **Profil satırı**: `auth.users`'a eklenen her kullanıcı için `private.handle_new_user()` trigger'ı `profiles` satırı açar (`private` şeması Data API'de yoktur).
+- **Middleware**: oturumsuz ziyaretçi yalnızca `/giris`, `/auth/*`, `/kvkk`, `/api/*` (kendi 401'ini verir) ve PWA dosyalarına erişir; diğer her yol `/giris?next=…`'e yönlenir. `next` yalnızca site içi göreli yol olabilir.
+- **Onboarding** (`/hosgeldin`, 3 adım): tedavi stratejileri → alerji/intolerans → ilaçlar → `profiles.onboarded_at`. Bitirmeyen kullanıcı uygulama ekranlarına giremez.
+- **Hesap silme** (Profil › Verileriniz): HIG action sheet ile onay → kullanıcının kendi oturumuyla reçete dosyaları silinir → admin API ile `auth.users` satırı silinir → tüm tablolar `ON DELETE CASCADE` ile temizlenir. Bu, uygulamada servis anahtarının kullanıldığı tek yerdir (sunucu tarafı).
+
+## Faz 5 kabul kriterleri
+
+- [x] Yeni kullanıcı onboarding'i bitirip analiz yapabiliyor — tarayıcıda magic link (Mailpit) → 3 adım → analiz
+- [x] Hesap silme tüm satırları kaldırıyor — `src/server/account.int.test.ts` + arayüzden silme sonrası tüm tablolar 0
+
 ## Arayüz (Faz 4)
 
 Ekranlar: **Bugün** (`/`), **Ekle** (sheet: barkod / elle yaz / reçete), **Kritik uyarı** (analiz sonrası, yalnızca `requiresAlert`), **Öğün analizi** (`/analiz/[id]`), **İlaçlarım** (`/ilaclarim`, `/ilaclarim/[id]`), **Profil** (`/profil`), **Öğünler** sekmesi (`/ogunler`).

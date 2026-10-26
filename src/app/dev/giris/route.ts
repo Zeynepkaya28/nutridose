@@ -26,7 +26,9 @@ export async function GET(request: Request) {
   if (created.data.user) {
     const userId = created.data.user.id;
     // First run: give the demo user the reference scenario profile.
-    await admin.from("profiles").upsert({ user_id: userId, display_name: "Demo" });
+    await admin
+      .from("profiles")
+      .upsert({ user_id: userId, display_name: "Demo", onboarded_at: new Date().toISOString() });
     await admin.from("user_conditions").upsert({ user_id: userId, condition_code: "cardiology" });
     await admin
       .from("user_medications")

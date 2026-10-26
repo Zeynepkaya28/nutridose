@@ -2,6 +2,7 @@ import { getProfileData, getViewer } from "@/server/queries";
 import { ListRow } from "@/ui/List";
 import { Disclaimer, LargeTitle } from "@/ui/Nav";
 import { signOut } from "../actions";
+import { DeleteAccountRow } from "./DeleteAccount";
 import { AllergyList, ConditionList } from "./ProfileLists";
 
 export const metadata = { title: "Profil" };
@@ -32,6 +33,16 @@ export default async function ProfilePage() {
             />
           </ul>
         </form>
+      </section>
+
+      <section className="list-section" aria-labelledby="danger-header">
+        <h2 className="list-section__header" id="danger-header">
+          Verileriniz
+        </h2>
+        <ul className="list">
+          <DeleteAccountRow />
+        </ul>
+        <p className="list-section__footer">Hesabınızı sildiğinizde tüm sağlık verileriniz ve dosyalarınız kalıcı olarak silinir.</p>
       </section>
 
       <Disclaimer />

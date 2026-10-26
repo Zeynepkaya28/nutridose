@@ -419,17 +419,20 @@ export type Database = {
         Row: {
           created_at: string;
           display_name: string | null;
+          onboarded_at: string | null;
           user_id: string;
         };
         ComputedFields: never;
         Insert: {
           created_at?: string;
           display_name?: string | null;
+          onboarded_at?: string | null;
           user_id?: string;
         };
         Update: {
           created_at?: string;
           display_name?: string | null;
+          onboarded_at?: string | null;
           user_id?: string;
         };
         Relationships: [];
