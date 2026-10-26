@@ -1,12 +1,15 @@
 -- RLS isolation test with two users. Run: npm run db:test
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(26);
 
 -- Two test users.
 insert into auth.users (id, instance_id, aud, role, email) values
   ('aaaaaaaa-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'a@test.local'),
   ('bbbbbbbb-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'b@test.local');
+
+-- Sign-up trigger created both profiles.
+select is((select count(*) from public.profiles where user_id in ('aaaaaaaa-0000-4000-8000-000000000001','bbbbbbbb-0000-4000-8000-000000000002')), 2::bigint, 'sign-up trigger creates profiles');
 
 -- Own catalog fixture (independent of seed.sql).
 insert into public.substances (id, name, kind) values ('cccccccc-0000-4000-8000-000000000001', 'TEST madde', 'nutrient');
@@ -16,7 +19,7 @@ insert into public.products (id, kind, name) values ('cccccccc-0000-4000-8000-00
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}', true);
 
-insert into public.profiles (display_name) values ('A');
+update public.profiles set display_name = 'A' where user_id = 'aaaaaaaa-0000-4000-8000-000000000001';
 insert into public.user_conditions (condition_code) values ('cardiology');
 insert into public.user_allergies (free_text, kind) values ('fıstık', 'allergy');
 insert into public.user_medications (product_id, dose) values ('cccccccc-0000-4000-8000-000000000002', '1x1');
@@ -26,6 +29,7 @@ insert into public.analysis_runs (id, meal_id, input_kind) values ('aaaaaaaa-222
 insert into public.analysis_findings (run_id, step, status, title) values ('aaaaaaaa-2222-4000-8000-000000000001', 'drug_food', 'caution', 'test');
 
 select is((select count(*) from public.meals), 1::bigint, 'A sees own meal');
+select is((select display_name from public.profiles), 'A', 'A can update own profile');
 select is((select count(*) from public.analysis_findings), 1::bigint, 'A sees own finding');
 select ok((select count(*) from public.substances) > 0, 'authenticated can read catalog');
 select throws_ok(
