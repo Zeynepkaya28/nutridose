@@ -65,11 +65,15 @@ export async function analyze(deps: AnalyzeDeps, request: AnalyzeRequest): Promi
     p_findings: findings.map((f) => ({
       step: f.step,
       status: f.status,
+      severity: f.severity,
       title: f.title,
       detail: f.detail,
+      message: f.message,
       interaction_id: f.interactionId,
     })),
+    p_requires_alert: result.requiresAlert,
     p_meal_id: request.mealId,
+    p_meal_items: input.items.map((item) => ({ product_id: item.productId ?? null, raw_text: item.rawText })),
   });
   if (saveError) {
     // Composite FK (meal_id, user_id): unknown meal or someone else's meal.

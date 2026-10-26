@@ -88,8 +88,20 @@ describe("POST /api/analyze", () => {
       .eq("run_id", result.runId)
       .order("position");
     expect(saved.data?.map((f) => f.title)).toEqual(result.findings.map((f) => f.title));
-    const run = await alice.client.from("analysis_runs").select("input_kind, strategy_codes").eq("id", result.runId).single();
-    expect(run.data).toEqual({ input_kind: "manual", strategy_codes: ["cardiology"] });
+    const run = await alice.client
+      .from("analysis_runs")
+      .select("input_kind, strategy_codes, requires_alert")
+      .eq("id", result.runId)
+      .single();
+    expect(run.data).toEqual({ input_kind: "manual", strategy_codes: ["cardiology"], requires_alert: true });
+    const savedSeverity = await alice.client
+      .from("analysis_findings")
+      .select("severity, message")
+      .eq("run_id", result.runId)
+      .eq("interaction_id", INTERACTION.grapefruitStatinCardio)
+      .single();
+    expect(savedSeverity.data?.severity).toBe("contraindicated");
+    expect(savedSeverity.data?.message).toMatch(/^Yüksek risk: /);
     const asBob = await bob.client.from("analysis_runs").select("id").eq("id", result.runId);
     expect(asBob.data).toEqual([]);
   });
@@ -141,8 +153,13 @@ describe("POST /api/analyze", () => {
     );
     expect(status).toBe(404);
     expect(json).toEqual({ error: MESSAGES.mealNotFound });
-    const own = await call({ inputKind: "manual", payload: { text: "muz" }, mealId: meal.data!.id }, alice);
+    const own = await call({ inputKind: "manual", payload: { text: "muz, uçan halı" }, mealId: meal.data!.id }, alice);
     expect(own.status).toBe(200);
+    const items = await alice.client.from("meal_items").select("raw_text, product_id").eq("meal_id", meal.data!.id);
+    expect(items.data?.map((i) => [i.raw_text, i.product_id !== null])).toEqual([
+      ["muz", true],
+      ["uçan halı", false],
+    ]);
   });
 
   it("401 without a session, 401 with a bad token", async () => {

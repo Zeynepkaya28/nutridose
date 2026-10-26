@@ -81,6 +81,17 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## Arayüz (Faz 4)
+
+Ekranlar: **Bugün** (`/`), **Ekle** (sheet: barkod / elle yaz / reçete), **Kritik uyarı** (analiz sonrası, yalnızca `requiresAlert`), **Öğün analizi** (`/analiz/[id]`), **İlaçlarım** (`/ilaclarim`, `/ilaclarim/[id]`), **Profil** (`/profil`), **Öğünler** sekmesi (`/ogunler`).
+
+- Tasarım belirteçleri: `src/ui/tokens.css` (sistem renkleri, metin stilleri rem cinsinden, açık/koyu, `prefers-contrast: more`, `prefers-reduced-motion`). Bileşen stilleri: `src/ui/components.css`.
+- Bileşenler (`src/ui`): `Icon` (SF Symbol adıyla anahtarlanır → Phosphor Icons, MIT), `ListSection`/`ListRow` (inset grouped, ≥ 44pt), `TabBar` (yüzen cam kapsül), `Sheet` (medium/large detent, grabber, swipe-to-dismiss, `<dialog>` ile odak kapanı), `Alert` (dikey düğmeler, varsayılan üstte, Vazgeç altta), `StatusBadge`/`FindingItem` (renk + şekil + metin).
+- Erişilebilirlik: Lighthouse erişilebilirlik puanı tüm ekranlarda **100** (açık ve koyu). %200 yazı boyutunda yatay taşma yok; satırlar yükselir, yan yana öğeler (container query, rem) alt alta geçer.
+- HIG'den bilinçli sapmalar (WCAG AA için): ikincil metin `secondaryLabel` yerine biraz daha koyu (0.78 alfa); açık modda etkileşimli mavi metin `rgb(0 95 220)` (Apple'ın artırılmış kontrast mavisi gri zeminde 4.09:1 kalıyordu); sekme etiketleri 11–14 px arasında sınırlanır (UIKit gibi).
+- PWA: `src/app/manifest.ts` (`display: standalone`), ikonlar `next/og` ile üretilir (`/icon`, `/apple-icon`, `/pwa-icon/192|512`). Safe area `env(safe-area-inset-*)` ile.
+- Geliştirme girişi: `npm run dev` iken `/dev/giris` yerel demo hesabıyla oturum açar (kardiyoloji + varfarin/atorvastatin). Yalnızca `NODE_ENV=development` **ve** yerel Supabase ile çalışır; diğer her durumda 404.
+
 ## API (Faz 3)
 
 ### `POST /api/analyze` (Node runtime)

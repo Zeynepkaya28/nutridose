@@ -9,7 +9,9 @@ if (!existsSync(dir)) {
   process.exit(1);
 }
 
-const needles = ["SUPABASE_SECRET_KEY", "sb_secret_"];
+// The bare "sb_secret_" prefix appears in supabase-js itself (key type check), so look for a real key.
+const needles = ["SUPABASE_SECRET_KEY"];
+const patterns = [/sb_secret_[A-Za-z0-9_-]{16,}/, /"role"\s*:\s*"service_role"/];
 const secret = process.env.SUPABASE_SECRET_KEY;
 if (secret) needles.push(secret);
 
@@ -21,6 +23,7 @@ const walk = (d) => {
     else if (/\.(js|css|html|json)$/.test(name)) {
       const text = readFileSync(p, "utf8");
       for (const n of needles) if (text.includes(n)) hits.push(`${p}: ${n === secret ? "<secret value>" : n}`);
+      for (const re of patterns) if (re.test(text)) hits.push(`${p}: ${re}`);
     }
   }
 };

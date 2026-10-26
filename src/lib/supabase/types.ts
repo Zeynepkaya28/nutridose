@@ -47,8 +47,10 @@ export type Database = {
           detail: string | null;
           id: string;
           interaction_id: string | null;
+          message: string | null;
           position: number;
           run_id: string;
+          severity: Database["public"]["Enums"]["severity"] | null;
           status: Database["public"]["Enums"]["finding_status"];
           step: Database["public"]["Enums"]["analysis_step"];
           title: string;
@@ -59,8 +61,10 @@ export type Database = {
           detail?: string | null;
           id?: string;
           interaction_id?: string | null;
+          message?: string | null;
           position?: number;
           run_id: string;
+          severity?: Database["public"]["Enums"]["severity"] | null;
           status: Database["public"]["Enums"]["finding_status"];
           step: Database["public"]["Enums"]["analysis_step"];
           title: string;
@@ -70,8 +74,10 @@ export type Database = {
           detail?: string | null;
           id?: string;
           interaction_id?: string | null;
+          message?: string | null;
           position?: number;
           run_id?: string;
+          severity?: Database["public"]["Enums"]["severity"] | null;
           status?: Database["public"]["Enums"]["finding_status"];
           step?: Database["public"]["Enums"]["analysis_step"];
           title?: string;
@@ -119,6 +125,7 @@ export type Database = {
           id: string;
           input_kind: Database["public"]["Enums"]["input_kind"];
           meal_id: string | null;
+          requires_alert: boolean;
           strategy_codes: string[];
           user_id: string;
         };
@@ -128,6 +135,7 @@ export type Database = {
           id?: string;
           input_kind: Database["public"]["Enums"]["input_kind"];
           meal_id?: string | null;
+          requires_alert?: boolean;
           strategy_codes?: string[];
           user_id?: string;
         };
@@ -136,6 +144,7 @@ export type Database = {
           id?: string;
           input_kind?: Database["public"]["Enums"]["input_kind"];
           meal_id?: string | null;
+          requires_alert?: boolean;
           strategy_codes?: string[];
           user_id?: string;
         };
@@ -558,6 +567,8 @@ export type Database = {
           p_findings: Json;
           p_input_kind: Database["public"]["Enums"]["input_kind"];
           p_meal_id?: string;
+          p_meal_items?: Json;
+          p_requires_alert?: boolean;
           p_strategy_codes: string[];
         };
         Returns: string;

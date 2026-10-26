@@ -1,0 +1,144 @@
+/*
+ * NutriDose design tokens — Apple HIG system values.
+ * Text sizes are in rem so they follow the browser's text size (Dynamic Type on the web).
+ * System font only; no font files are embedded (HIG › Typography).
+ */
+:root {
+  color-scheme: light dark;
+
+  --font-system: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* System colors (light) */
+  --system-blue: rgb(0 136 255);
+  --system-red: rgb(255 56 60);
+  --system-orange: rgb(255 141 40);
+  --system-green: rgb(52 199 89);
+  --system-indigo: rgb(97 85 245);
+  --system-mint: rgb(0 200 179);
+  --system-teal: rgb(0 195 208);
+  --system-gray: rgb(142 142 147);
+
+  /* Colored text under 17pt uses the increased-contrast values */
+  --text-blue: rgb(30 110 244);
+  --text-red: rgb(233 21 45);
+  --text-orange: rgb(197 83 0);
+  --text-green: rgb(0 137 50);
+
+  --tint: var(--system-blue);
+  /*
+   * Interactive blue text. Apple's increased-contrast blue is 4.09:1 on #F2F2F7 and 3.84:1 on the glass
+   * tab bar, so tinted text (links, back button, active tab) uses a slightly deeper blue to stay ≥ 4.5:1.
+   */
+  --tint-text: rgb(0 95 220);
+  /* Fill behind white button text: increased-contrast blue keeps white text ≥ 4.5:1 */
+  --tint-fill: rgb(30 110 244);
+  --destructive-text: var(--text-red);
+
+  /* Backgrounds */
+  --bg-grouped: #f2f2f7;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --fill-secondary: rgba(120, 120, 128, 0.16);
+  --fill-tertiary: rgba(118, 118, 128, 0.12);
+  --separator: rgba(60, 60, 67, 0.29);
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --backdrop: rgba(0, 0, 0, 0.3);
+
+  /* Labels */
+  --label: #000000;
+  /*
+   * Apple's secondaryLabel is rgba(60,60,67,0.6) (≈3.4:1 on white). For body-size text we use a
+   * slightly stronger alpha so secondary text meets WCAG AA (4.5:1) on cards and grouped backgrounds.
+   */
+  --label-secondary: rgba(60, 60, 67, 0.78);
+  --label-tertiary: rgba(60, 60, 67, 0.3);
+  --on-tint: #ffffff;
+
+  /* Typography (size / line height / weight) */
+  --large-title: 700 2.125rem / 2.5625rem var(--font-system);
+  --title1: 700 1.75rem / 2.125rem var(--font-system);
+  --title2: 700 1.375rem / 1.75rem var(--font-system);
+  --title3: 600 1.25rem / 1.5625rem var(--font-system);
+  --headline: 600 1.0625rem / 1.375rem var(--font-system);
+  --body: 400 1.0625rem / 1.375rem var(--font-system);
+  --callout: 400 1rem / 1.3125rem var(--font-system);
+  --subhead: 400 0.9375rem / 1.25rem var(--font-system);
+  --footnote: 400 0.8125rem / 1.125rem var(--font-system);
+  --caption1: 400 0.75rem / 1rem var(--font-system);
+  --caption2: 400 0.6875rem / 0.8125rem var(--font-system);
+
+  /* Layout */
+  --gutter: 16px;
+  --radius-card: 12px;
+  --radius-sheet: 16px;
+  --tap: max(44px, 2.75rem);
+  --tabbar-space: calc(96px + env(safe-area-inset-bottom));
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration: 320ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --system-blue: rgb(0 145 255);
+    --system-red: rgb(255 66 69);
+    --system-orange: rgb(255 146 48);
+    --system-green: rgb(48 209 88);
+    --system-gray: rgb(142 142 147);
+
+    /* Dark system colors meet 4.5:1 on dark backgrounds; blue is lifted so it also does on fills */
+    --text-blue: rgb(64 156 255);
+    --tint-text: var(--text-blue);
+    --text-red: var(--system-red);
+    --text-orange: var(--system-orange);
+    --text-green: var(--system-green);
+
+    --bg-grouped: #000000;
+    --bg-card: #1c1c1e;
+    --bg-elevated: #1c1c1e;
+    --fill-secondary: rgba(120, 120, 128, 0.32);
+    --fill-tertiary: rgba(118, 118, 128, 0.24);
+    --separator: rgba(84, 84, 88, 0.65);
+    --glass: rgba(30, 30, 32, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --backdrop: rgba(0, 0, 0, 0.5);
+
+    --label: #ffffff;
+    --label-secondary: rgba(235, 235, 245, 0.6);
+    --label-tertiary: rgba(235, 235, 245, 0.3);
+  }
+}
+
+/* Increase Contrast */
+@media (prefers-contrast: more) {
+  :root {
+    --system-blue: rgb(30 110 244);
+    --system-red: rgb(233 21 45);
+    --system-orange: rgb(197 83 0);
+    --system-green: rgb(0 137 50);
+    --separator: rgba(60, 60, 67, 0.6);
+    --label-secondary: rgba(60, 60, 67, 0.9);
+    --glass: rgba(255, 255, 255, 0.95);
+  }
+}
+
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root {
+    --system-blue: rgb(0 145 255);
+    --system-red: rgb(255 66 69);
+    --system-orange: rgb(255 146 48);
+    --system-green: rgb(48 209 88);
+    --separator: rgba(235, 235, 245, 0.5);
+    --label-secondary: rgba(235, 235, 245, 0.85);
+    --glass: rgba(28, 28, 30, 0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration: 200ms;
+  }
+}
