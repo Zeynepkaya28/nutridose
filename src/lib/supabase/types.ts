@@ -47,6 +47,7 @@ export type Database = {
           detail: string | null;
           id: string;
           interaction_id: string | null;
+          position: number;
           run_id: string;
           status: Database["public"]["Enums"]["finding_status"];
           step: Database["public"]["Enums"]["analysis_step"];
@@ -58,6 +59,7 @@ export type Database = {
           detail?: string | null;
           id?: string;
           interaction_id?: string | null;
+          position?: number;
           run_id: string;
           status: Database["public"]["Enums"]["finding_status"];
           step: Database["public"]["Enums"]["analysis_step"];
@@ -68,6 +70,7 @@ export type Database = {
           detail?: string | null;
           id?: string;
           interaction_id?: string | null;
+          position?: number;
           run_id?: string;
           status?: Database["public"]["Enums"]["finding_status"];
           step?: Database["public"]["Enums"]["analysis_step"];
@@ -90,6 +93,25 @@ export type Database = {
             referencedColumns: ["id", "user_id"];
           },
         ];
+      };
+      analysis_rate_events: {
+        Row: {
+          created_at: string;
+          id: number;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: never;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: never;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       analysis_runs: {
         Row: {
@@ -526,7 +548,46 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      consume_analysis_quota: {
+        Args: { p_limit?: number; p_window_seconds?: number };
+        Returns: boolean;
+      };
+      normalize_search_text: { Args: { p_text: string }; Returns: string };
+      save_analysis_run: {
+        Args: {
+          p_findings: Json;
+          p_input_kind: Database["public"]["Enums"]["input_kind"];
+          p_meal_id?: string;
+          p_strategy_codes: string[];
+        };
+        Returns: string;
+      };
+      search_products: {
+        Args: {
+          p_kinds?: Database["public"]["Enums"]["product_kind"][];
+          p_limit?: number;
+          p_query: string;
+        };
+        Returns: {
+          product_id: string;
+          rank: number;
+        }[];
+      };
+      search_substances: {
+        Args: { p_query: string };
+        Returns: {
+          id: string;
+          kind: Database["public"]["Enums"]["substance_kind"];
+          name: string;
+          synonyms: string[];
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "substances";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     };
     Enums: {
       allergy_kind: "allergy" | "intolerance";

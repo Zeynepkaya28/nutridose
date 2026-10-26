@@ -17,12 +17,15 @@
     "db:types": "supabase gen types typescript --local > src/lib/supabase/types.ts && oxfmt src/lib/supabase/types.ts",
     "check:bundle": "node scripts/check-client-bundle.mjs",
     "db:test": "supabase test db",
-    "db:lint": "supabase db lint --level warning"
+    "db:lint": "supabase db lint --level warning",
+    "test:integration": "vitest run --config vitest.integration.config.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "@zxing/browser": "^0.2.1",
     "next": "15.5.28",
+    "pdf-parse": "^2.4.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "server-only": "^0.0.1",

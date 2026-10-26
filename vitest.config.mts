@@ -11,6 +11,7 @@ export default defineConfig({
     // UI tests opt in with `// @vitest-environment jsdom`.
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "src/**/*.int.test.ts"],
     coverage: {
       provider: "v8",
       include: ["src/domain/**/*.ts"],

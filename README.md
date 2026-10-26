@@ -81,6 +81,46 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## API (Faz 3)
+
+### `POST /api/analyze` (Node runtime)
+
+```jsonc
+// İstek (zod ile doğrulanır)
+{ "inputKind": "manual",           "payload": { "text": "ıspanak, greyfurt suyu" }, "mealId": "<uuid, opsiyonel>" }
+{ "inputKind": "barcode",          "payload": { "barcode": "8690000000017" } }
+{ "inputKind": "prescription_pdf", "payload": { "storagePath": "<user_id>/<uuid>.pdf" } }
+
+// Yanıt
+{ "runId": "…", "requiresAlert": true,
+  "findings": [{ "step": "drug_food", "status": "high", "severity": "contraindicated",
+                 "title": "…", "detail": "…", "message": "…", "interactionId": "…" }] }
+```
+
+Akış: oturum → kota (dakikada 30) → Creator ile `AnalysisInput` → kullanıcının koşullarından `StrategyResolver` → `SafetyPipeline` → `save_analysis_run` (tek transaction) → yanıt.
+
+- **Kimlik:** web için `@supabase/ssr` çerezi, native/iOS istemci için `Authorization: Bearer <access_token>`. İkisi de publishable key kullanır; **servis anahtarı kullanılmaz**, her okuma/yazma RLS'ten geçer.
+- **Hatalar:** kullanıcıya yalnızca Türkçe mesaj döner (`src/server/errors.ts`); teknik ayrıntı JSON log'a gider, `x-request-id` başlığıyla eşleştirilebilir. Log'a istek gövdesi/sağlık verisi yazılmaz.
+- **Rate limit:** `analysis_rate_events` (yalnızca ekleme; kullanıcı kendi sayacını silemez) + `consume_analysis_quota()`. Aşılırsa 429 + `Retry-After: 60`.
+- **Reçete PDF:** tarayıcı dosyayı doğrudan private `prescriptions` bucket'ına yükler (`src/lib/prescriptions/upload.ts`); API yalnızca yolu alır, sunucuda kullanıcının kendi oturumuyla indirir, ≤ 5 MB / `application/pdf` / `%PDF-` imzasını doğrular, metni `pdf-parse` ile çıkarır. Taranmış (görüntü) PDF'ler desteklenmez.
+- **Barkod:** `src/lib/barcode/scanner.ts` — tarayıcıda `BarcodeDetector`, desteklenmiyorsa `@zxing/browser`. API'ye yalnızca barkod metni gider.
+- **Katalog araması:** `search_products` / `search_substances` SQL fonksiyonları (Türkçe karakter ve büyük/küçük harf duyarsız).
+
+### Testler
+
+```bash
+npm test                     # birim testleri (+ domain kapsam eşiği)
+npm run test:integration     # yerel Supabase'e karşı /api/analyze uçtan uca (route handler doğrudan çağrılır)
+NUTRIDOSE_BASE_URL=http://localhost:3000 npm run test:integration   # + çalışan sunucuya gerçek HTTP
+```
+
+Entegrasyon testleri yalnızca yerel Supabase'e (127.0.0.1/localhost) karşı çalışır; geçici test kullanıcılarını oluşturup siler.
+
+## Faz 3 kabul kriterleri
+
+- [x] Örnek senaryo API üzerinden doğru bulguları döndürüyor (route handler, `next dev` ve `next start` üzerinden)
+- [x] RLS servis anahtarı olmadan çalışıyor — API yolu yalnızca kullanıcının token'ıyla çalışır
+
 ## Domain katmanı (Faz 2)
 
 `src/domain` saf TypeScript'tir; Next.js, React ve Supabase import etmez (ESLint kuralı + `boundary.test.ts`). Katalog erişimi `CatalogRepository` arayüzüyle enjekte edilir.
