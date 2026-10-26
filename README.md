@@ -81,6 +81,24 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## Domain katmanı (Faz 2)
+
+`src/domain` saf TypeScript'tir; Next.js, React ve Supabase import etmez (ESLint kuralı + `boundary.test.ts`). Katalog erişimi `CatalogRepository` arayüzüyle enjekte edilir.
+
+- **Factory Method** (`factory/`): `BarcodeCreator`, `ManualTextCreator`, `PrescriptionPdfCreator` → ilgili `InputParser` → `AnalysisInput`. `creatorFor(kind, deps)` girdi türüne göre creator seçer. PDF metni `PdfTextExtractor` arayüzünden gelir (Faz 3'te pdf-parse).
+- **Strategy** (`strategy/`): 5 tedavi profili + `GeneralStrategy` (profil yoksa) + `CompositeStrategy` (en yüksek şiddet, en sıkı limit). `StrategyResolver.fromConditions(codes)`.
+- **Chain of Responsibility** (`chain/`): `ActiveIngredientScan → DrugFoodInteraction → DoseLimit → ToleranceAllergy`. Bir halka hata verirse `error` bulgusu yazılır, zincir devam eder. `contraindicated` → `requiresAlert = true`. `SafetyPipeline.build(strategy, { catalog })`.
+
+Klinik kurallar hakkında:
+- Sayısal limitler kodda **yoktur**; kaynaklı `nutrient_limits` kayıtlarından gelir. Stratejiler yalnızca niteliksel kurallar taşır (`strategy/rules.ts`, örn. böbrek profilinde potasyum içeren etkileşimi bir seviye yükseltmek). Bu kurallar da **ÖRNEK – klinik doğrulama gerekli**'dir.
+- Stratejiler hiçbir zaman kendiliğinden `contraindicated` üretmez; bu yalnızca katalog verisinden gelir. Aynı madde çifti için genel ve profile özel kayıt varsa en şiddetlisi kullanılır.
+- Bulgu durumunda (`status`) `contraindicated` değeri yoktur; böyle bir etkileşim `high` olarak görünür ve `requiresAlert` ile kritik uyarıyı açar.
+
+## Faz 2 kabul kriterleri
+
+- [x] `npm test` yeşil — 103 test, `src/domain` için %100 satır/dal/fonksiyon kapsamı (eşik zorunlu)
+- [x] Domain klasörü Next.js veya Supabase import etmiyor
+
 ## Faz 1 kabul kriterleri
 
 - [x] Başka kullanıcının satırı okunamıyor — `npm run db:test` (24 test)

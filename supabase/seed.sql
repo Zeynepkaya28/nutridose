@@ -55,6 +55,13 @@ values
    'info', null,
    'ÖRNEK kayıt – mekanizma klinik kaynaktan girilecek.',
    'ÖRNEK kayıt – öneri klinik kaynaktan girilecek.',
+   'ÖRNEK – klinik doğrulama gerekli', null),
+  -- Condition-specific row for the same pair: drives requiresAlert in the cardiology scenario.
+  ('30000000-0000-4000-8000-000000000004',
+   '10000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002',
+   'contraindicated', 'cardiology',
+   'ÖRNEK kayıt – mekanizma klinik kaynaktan girilecek.',
+   'ÖRNEK kayıt – öneri klinik kaynaktan girilecek.',
    'ÖRNEK – klinik doğrulama gerekli', null);
 
 -- Placeholder limit (value is arbitrary, only for exercising DoseLimitHandler in development).

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { hasPublicSupabaseEnv } from "@/lib/supabase/env";
 
