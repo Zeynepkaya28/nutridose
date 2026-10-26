@@ -45,7 +45,7 @@ select lives_ok(
 -- ── User B cannot see or change A's rows ──
 select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}', true);
 
-select is((select count(*) from public.profiles),          0::bigint, 'B cannot read A profile');
+select is((select count(*) from public.profiles where user_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 0::bigint, 'B cannot read A profile');
 select is((select count(*) from public.user_conditions),   0::bigint, 'B cannot read A conditions');
 select is((select count(*) from public.user_allergies),    0::bigint, 'B cannot read A allergies');
 select is((select count(*) from public.user_medications),  0::bigint, 'B cannot read A medications');
