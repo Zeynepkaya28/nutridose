@@ -52,6 +52,8 @@ npm run dev                     # http://localhost:3000
 | `npm run supabase:start` / `supabase:stop` / `supabase:status` | yerel Supabase yığını |
 | `npm run db:reset` | yerel veritabanını sıfırlar, migration'ları + `seed.sql`'i uygular |
 | `npm run db:types` | `src/lib/supabase/types.ts` dosyasını yerel şemadan üretir |
+| `npm run db:test` | `supabase/tests` altındaki pgTAP testleri (iki kullanıcılı RLS izolasyonu) |
+| `npm run db:lint` | şema tip/derleme kontrolü |
 | `npm run check:bundle` | build sonrası `.next/static` içinde gizli anahtar arar |
 
 ## Vercel'e bağlama
@@ -64,6 +66,26 @@ npm run dev                     # http://localhost:3000
 ### Preview ortamı → ayrı Supabase branch'i
 
 Preview deploy'ları production veritabanına **yazmamalı**. Supabase projesinde **Branching**'i açın ve GitHub entegrasyonunu bağlayın: her pull request için Supabase ayrı bir preview branch'i (kendi veritabanı + `supabase/migrations` uygulanmış hâli) açar, Vercel entegrasyonu da o PR'ın Preview deploy'una bu branch'in URL/anahtarlarını verir. Production yalnızca ana Supabase projesine bağlı kalır. (Faz 6'da CI ile doğrulanacak.)
+
+## Yerel portlar
+
+Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığını kullanır (aynı makinede başka bir yerel Supabase projesi çalışabilsin diye): API `55321`, DB `55322`, Studio `55323`, Mailpit `55324`.
+
+## Veritabanı (Faz 1)
+
+- **Katalog tabloları** (`substances`, `products`, `product_substances`, `conditions`, `interactions`, `nutrient_limits`, `allergens`): giriş yapmış kullanıcı yalnızca okur; `anon` erişemez; yazma yalnızca service role ile.
+- **Kullanıcı tabloları**: her tabloda `user_id` var (varsayılanı `auth.uid()`), select/insert/update/delete için ayrı politikalar `(select auth.uid()) = user_id` kalıbıyla. Alt tablolar (`meal_items`, `analysis_findings`, `analysis_runs.meal_id`) üst satıra `(id, user_id)` bileşik foreign key ile bağlıdır; böylece bir kullanıcı başkasının öğününe/analizine satır ekleyemez.
+- Kullanıcı silinince (`auth.users`) tüm verisi cascade ile silinir.
+- **Storage**: `prescriptions` bucket'ı private, 5 MB, yalnızca `application/pdf`. Yol `{user_id}/{uuid}.pdf` olmalı; politikalar yalnızca sahibine izin verir.
+- `conditions` tablosundaki 5 tedavi profili kodu migration ile gelir. `seed.sql` yalnızca geliştirme içindir; tüm etkileşim/limit kayıtları **ÖRNEK – klinik doğrulama gerekli** olarak işaretlidir ve klinik veri değildir.
+
+Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
+
+## Faz 1 kabul kriterleri
+
+- [x] Başka kullanıcının satırı okunamıyor — `npm run db:test` (24 test)
+- [x] Advisors temiz (WARN/ERROR yok)
+- [x] Tipler üretildi — `src/lib/supabase/types.ts`
 
 ## Faz 0 kabul kriterleri
 

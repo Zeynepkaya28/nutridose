@@ -14,8 +14,10 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status -o env",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/types.ts",
-    "check:bundle": "node scripts/check-client-bundle.mjs"
+    "db:types": "supabase gen types typescript --local > src/lib/supabase/types.ts && oxfmt src/lib/supabase/types.ts",
+    "check:bundle": "node scripts/check-client-bundle.mjs",
+    "db:test": "supabase test db",
+    "db:lint": "supabase db lint --level warning"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -37,11 +39,15 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.28",
     "jsdom": "^29.1.1",
+    "oxfmt": "0.74.0",
     "supabase": "^2.122.0",
     "typescript": "^5",
     "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=20.9"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.2.15"
   }
 }
