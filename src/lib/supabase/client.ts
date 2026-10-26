@@ -1,0 +1,9 @@
+import { createBrowserClient } from "@supabase/ssr";
+import { getPublicSupabaseEnv } from "./env";
+import type { Database } from "./types";
+
+// Browser client. Uses only the publishable key; RLS protects the data.
+export function createClient() {
+  const { url, publishableKey } = getPublicSupabaseEnv();
+  return createBrowserClient<Database>(url, publishableKey);
+}

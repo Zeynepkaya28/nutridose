@@ -1,0 +1,2 @@
+-- Development-only sample data. Filled in Faz 1.
+-- Never put real clinical data here; evidence_source must read 'ÖRNEK – klinik doğrulama gerekli'.

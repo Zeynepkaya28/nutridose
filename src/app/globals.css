@@ -1,0 +1,31 @@
+/* Minimal base. Design tokens (src/ui/tokens.css) arrive in Faz 4. */
+:root {
+  color-scheme: light dark;
+  --bg: #f2f2f7;
+  --label: #000000;
+  --secondary-label: rgba(60, 60, 67, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --label: #ffffff;
+    --secondary-label: rgba(235, 235, 245, 0.6);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  /* System font stack; no font files are embedded. */
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--label);
+}
