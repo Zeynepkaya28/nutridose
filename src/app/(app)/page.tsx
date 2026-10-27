@@ -8,7 +8,8 @@ import { AddButton } from "./_components/AddSheet";
 
 export const metadata = { title: "Bugün" };
 
-export default async function TodayPage() {
+export default async function TodayPage({ searchParams }: { searchParams: Promise<{ sifre?: string }> }) {
+  const { sifre } = await searchParams;
   const viewer = (await getViewer())!;
   const [meals, medications] = await Promise.all([getTodayMeals(viewer), getMedications(viewer)]);
   const active = medications.filter((m) => m.active);
@@ -17,6 +18,12 @@ export default async function TodayPage() {
   return (
     <>
       <LargeTitle title="Bugün" subtitle={formatLongDate()} trailing={<AddButton />} />
+
+      {sifre === "yenilendi" ? (
+        <p className="card t-subhead" role="status">
+          Şifreniz yenilendi. Diğer cihazlardaki oturumlar kapatıldı.
+        </p>
+      ) : null}
 
       {critical?.latestRun ? (
         <Link href={`/analiz/${critical.latestRun.id}`} className="card card--critical" style={{ display: "block" }}>

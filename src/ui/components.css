@@ -1034,3 +1034,40 @@ textarea.field {
 .steps li.done {
   background: var(--tint);
 }
+
+/* ── Password field ────────────────────────────────────── */
+.password-field {
+  display: flex;
+  align-items: center;
+}
+
+.password-field .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.password-field__toggle {
+  flex: none;
+  margin-right: 4px;
+  color: var(--label-secondary);
+}
+
+.list .field + .field,
+.list .password-field + .password-field,
+.list .field + .password-field {
+  border-top: 0.5px solid var(--separator);
+}
+
+/* Short options (e.g. Sistem / Açık / Koyu) stay on one row on phones; they still wrap at very large text sizes. */
+.segmented--compact label {
+  flex-basis: 5rem;
+}
+
+/* Links inside running text are underlined, not told apart by color alone (WCAG 1.4.1). */
+p a,
+.disclaimer a,
+.list-section__footer a {
+  color: var(--tint-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

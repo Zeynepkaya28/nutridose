@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/server";
 import { deleteAccount } from "@/server/account";
+import { changePassword } from "@/server/password";
+import { authErrorMessage } from "@/lib/auth/password";
 import { isConditionCode } from "@/domain/types";
 import { SupabaseCatalogRepository } from "@/infra/SupabaseCatalogRepository";
 import { AnalyzeRequestSchema } from "@/lib/api/analyze";
@@ -233,4 +236,43 @@ export async function completeOnboarding(): Promise<void> {
   }
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+// ── Security ───────────────────────────────────────────────
+
+export type SecurityState = { status: "idle" | "done" | "error"; message?: string };
+
+export async function changePasswordAction(_prev: SecurityState, form: FormData): Promise<SecurityState> {
+  const viewer = await requireViewer();
+  if (!viewer?.email) return { status: "error", message: MESSAGES.unauthenticated };
+  const result = await changePassword(
+    viewer.supabase,
+    viewer.email,
+    String(form.get("current") ?? ""),
+    String(form.get("password") ?? ""),
+    String(form.get("confirm") ?? ""),
+  );
+  if (!result.ok) return { status: "error", message: result.error };
+  return { status: "done", message: "Şifreniz değiştirildi. Diğer cihazlardaki oturumlar kapatıldı." };
+}
+
+/** For users who signed up without a password or forgot it: sends a reset link to their own address. */
+export async function sendOwnPasswordReset(): Promise<SecurityState> {
+  const viewer = await requireViewer();
+  if (!viewer?.email) return { status: "error", message: MESSAGES.unauthenticated };
+  const h = await headers();
+  const origin = h.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? `https://${h.get("host")}`;
+  const redirectTo = new URL("/auth/callback", origin);
+  redirectTo.searchParams.set("next", "/sifre-yenile");
+  const { error } = await viewer.supabase.auth.resetPasswordForEmail(viewer.email, { redirectTo: redirectTo.toString() });
+  if (error) return { status: "error", message: authErrorMessage(error.code, error.status) };
+  return { status: "done", message: `${viewer.email} adresine şifre belirleme bağlantısı gönderdik.` };
+}
+
+/** Ends every session of this account, including this device. */
+export async function signOutEverywhere(): Promise<void> {
+  const viewer = await requireViewer();
+  await viewer?.supabase.auth.signOut({ scope: "global" });
+  revalidatePath("/", "layout");
+  redirect("/giris");
 }

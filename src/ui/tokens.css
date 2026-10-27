@@ -2,58 +2,75 @@
  * NutriDose design tokens — Apple HIG system values.
  * Text sizes are in rem so they follow the browser's text size (Dynamic Type on the web).
  * System font only; no font files are embedded (HIG › Typography).
+ *
+ * Theme: every color is light-dark(light, dark). Which side applies comes from `color-scheme`:
+ *   <html>                      → follows the device (Sistem)
+ *   <html data-theme="light">   → always light (Açık)
+ *   <html data-theme="dark">    → always dark (Koyu)
  */
 :root {
   color-scheme: light dark;
+}
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root {
   --font-system: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* System colors (light) */
-  --system-blue: rgb(0 136 255);
-  --system-red: rgb(255 56 60);
-  --system-orange: rgb(255 141 40);
-  --system-green: rgb(52 199 89);
+  /* System colors */
+  --system-blue: light-dark(rgb(0 136 255), rgb(0 145 255));
+  --system-red: light-dark(rgb(255 56 60), rgb(255 66 69));
+  --system-orange: light-dark(rgb(255 141 40), rgb(255 146 48));
+  --system-green: light-dark(rgb(52 199 89), rgb(48 209 88));
   --system-indigo: rgb(97 85 245);
   --system-mint: rgb(0 200 179);
   --system-teal: rgb(0 195 208);
   --system-gray: rgb(142 142 147);
 
-  /* Colored text under 17pt uses the increased-contrast values */
-  --text-blue: rgb(30 110 244);
-  --text-red: rgb(233 21 45);
-  --text-orange: rgb(197 83 0);
-  --text-green: rgb(0 137 50);
+  /* Colored text under 17pt: increased-contrast values in light; dark system colors already meet 4.5:1 */
+  --text-blue: light-dark(rgb(30 110 244), rgb(64 156 255));
+  --text-red: light-dark(rgb(233 21 45), rgb(255 66 69));
+  --text-orange: light-dark(rgb(197 83 0), rgb(255 146 48));
+  --text-green: light-dark(rgb(0 137 50), rgb(48 209 88));
 
   --tint: var(--system-blue);
   /*
    * Interactive blue text. Apple's increased-contrast blue is 4.09:1 on #F2F2F7 and 3.84:1 on the glass
    * tab bar, so tinted text (links, back button, active tab) uses a slightly deeper blue to stay ≥ 4.5:1.
    */
-  --tint-text: rgb(0 95 220);
+  --tint-text: light-dark(rgb(0 95 220), rgb(64 156 255));
   /* Fill behind white button text: increased-contrast blue keeps white text ≥ 4.5:1 */
   --tint-fill: rgb(30 110 244);
   --destructive-text: var(--text-red);
 
   /* Backgrounds */
-  --bg-grouped: #f2f2f7;
-  --bg-card: #ffffff;
-  --bg-elevated: #ffffff;
-  --fill-secondary: rgba(120, 120, 128, 0.16);
-  --fill-tertiary: rgba(118, 118, 128, 0.12);
-  --separator: rgba(60, 60, 67, 0.29);
-  --glass: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-  --backdrop: rgba(0, 0, 0, 0.3);
+  --bg-grouped: light-dark(#f2f2f7, #000000);
+  --bg-card: light-dark(#ffffff, #1c1c1e);
+  --bg-elevated: light-dark(#ffffff, #1c1c1e);
+  --fill-secondary: light-dark(rgba(120, 120, 128, 0.16), rgba(120, 120, 128, 0.32));
+  --fill-tertiary: light-dark(rgba(118, 118, 128, 0.12), rgba(118, 118, 128, 0.24));
+  --separator: light-dark(rgba(60, 60, 67, 0.29), rgba(84, 84, 88, 0.65));
+  --glass: light-dark(rgba(255, 255, 255, 0.72), rgba(30, 30, 32, 0.7));
+  --glass-border: light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.12));
+  --shadow-floating:
+    0 8px 32px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5)),
+    0 1px 3px light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3));
+  --backdrop: light-dark(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
 
   /* Labels */
-  --label: #000000;
+  --label: light-dark(#000000, #ffffff);
   /*
    * Apple's secondaryLabel is rgba(60,60,67,0.6) (≈3.4:1 on white). For body-size text we use a
    * slightly stronger alpha so secondary text meets WCAG AA (4.5:1) on cards and grouped backgrounds.
    */
-  --label-secondary: rgba(60, 60, 67, 0.78);
-  --label-tertiary: rgba(60, 60, 67, 0.3);
+  --label-secondary: light-dark(rgba(60, 60, 67, 0.78), rgba(235, 235, 245, 0.6));
+  --label-tertiary: light-dark(rgba(60, 60, 67, 0.3), rgba(235, 235, 245, 0.3));
   --on-tint: #ffffff;
 
   /* Typography (size / line height / weight) */
@@ -80,60 +97,16 @@
   --duration: 320ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --system-blue: rgb(0 145 255);
-    --system-red: rgb(255 66 69);
-    --system-orange: rgb(255 146 48);
-    --system-green: rgb(48 209 88);
-    --system-gray: rgb(142 142 147);
-
-    /* Dark system colors meet 4.5:1 on dark backgrounds; blue is lifted so it also does on fills */
-    --text-blue: rgb(64 156 255);
-    --tint-text: var(--text-blue);
-    --text-red: var(--system-red);
-    --text-orange: var(--system-orange);
-    --text-green: var(--system-green);
-
-    --bg-grouped: #000000;
-    --bg-card: #1c1c1e;
-    --bg-elevated: #1c1c1e;
-    --fill-secondary: rgba(120, 120, 128, 0.32);
-    --fill-tertiary: rgba(118, 118, 128, 0.24);
-    --separator: rgba(84, 84, 88, 0.65);
-    --glass: rgba(30, 30, 32, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --backdrop: rgba(0, 0, 0, 0.5);
-
-    --label: #ffffff;
-    --label-secondary: rgba(235, 235, 245, 0.6);
-    --label-tertiary: rgba(235, 235, 245, 0.3);
-  }
-}
-
 /* Increase Contrast */
 @media (prefers-contrast: more) {
   :root {
-    --system-blue: rgb(30 110 244);
-    --system-red: rgb(233 21 45);
-    --system-orange: rgb(197 83 0);
-    --system-green: rgb(0 137 50);
-    --separator: rgba(60, 60, 67, 0.6);
-    --label-secondary: rgba(60, 60, 67, 0.9);
-    --glass: rgba(255, 255, 255, 0.95);
-  }
-}
-
-@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root {
-    --system-blue: rgb(0 145 255);
-    --system-red: rgb(255 66 69);
-    --system-orange: rgb(255 146 48);
-    --system-green: rgb(48 209 88);
-    --separator: rgba(235, 235, 245, 0.5);
-    --label-secondary: rgba(235, 235, 245, 0.85);
-    --glass: rgba(28, 28, 30, 0.97);
+    --system-blue: light-dark(rgb(30 110 244), rgb(0 145 255));
+    --system-red: light-dark(rgb(233 21 45), rgb(255 66 69));
+    --system-orange: light-dark(rgb(197 83 0), rgb(255 146 48));
+    --system-green: light-dark(rgb(0 137 50), rgb(48 209 88));
+    --separator: light-dark(rgba(60, 60, 67, 0.6), rgba(235, 235, 245, 0.5));
+    --label-secondary: light-dark(rgba(60, 60, 67, 0.9), rgba(235, 235, 245, 0.85));
+    --glass: light-dark(rgba(255, 255, 255, 0.95), rgba(28, 28, 30, 0.97));
   }
 }
 

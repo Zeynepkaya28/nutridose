@@ -9,6 +9,7 @@ export function safeNext(value: string | null | undefined, fallback = "/"): stri
 export function isPublicPath(pathname: string): boolean {
   return (
     pathname === "/giris" ||
+    pathname === "/sifremi-unuttum" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/dev/") ||

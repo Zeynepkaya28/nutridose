@@ -1,4 +1,8 @@
+import { cookies } from "next/headers";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { getProfileData, getViewer } from "@/server/queries";
+import { ThemePicker } from "@/ui/ThemePicker";
+import { SecuritySection } from "./SecuritySection";
 import { ListRow } from "@/ui/List";
 import { Disclaimer, LargeTitle } from "@/ui/Nav";
 import { signOut } from "../actions";
@@ -17,6 +21,9 @@ export default async function ProfilePage() {
 
       <ConditionList selected={profile.conditions} names={profile.conditionNames} />
       <AllergyList allergies={profile.allergies} catalog={profile.allergenCatalog} />
+
+      <ThemePicker initial={parseTheme((await cookies()).get(THEME_COOKIE)?.value)} />
+      <SecuritySection />
 
       <section className="list-section" aria-labelledby="account-header">
         <h2 className="list-section__header" id="account-header">

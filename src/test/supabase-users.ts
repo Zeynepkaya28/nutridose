@@ -26,6 +26,8 @@ export function adminClient(): SupabaseClient<Database> {
 
 export interface TestUser {
   id: string;
+  email: string;
+  password: string;
   accessToken: string;
   /** Acts as this user with the publishable key (RLS applies). */
   client: SupabaseClient<Database>;
@@ -36,7 +38,8 @@ export async function createTestUser(
   options: { consent?: boolean } = {},
 ): Promise<TestUser> {
   const email = `test-${randomUUID()}@nutridose.test`;
-  const password = randomBytes(24).toString("base64url");
+  // Meets the password policy: lower + upper letters and digits.
+  const password = `Aa1${randomBytes(18).toString("base64url")}`;
   const { data: created, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !created.user) throw error ?? new Error("createUser failed");
 
@@ -54,7 +57,7 @@ export async function createTestUser(
     if (consentError) throw consentError;
   }
 
-  return { id: created.user.id, accessToken: session.session.access_token, client };
+  return { id: created.user.id, email, password, accessToken: session.session.access_token, client };
 }
 
 export async function deleteTestUser(admin: SupabaseClient<Database>, user: TestUser) {

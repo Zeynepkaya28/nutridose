@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import "@/ui/tokens.css";
 import "@/ui/components.css";
 
@@ -11,21 +12,34 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 };
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f2f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
-};
+const LIGHT = "#f2f2f7";
+const DARK = "#000000";
+
+export async function generateViewport(): Promise<Viewport> {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    colorScheme: theme === "system" ? "light dark" : theme,
+    themeColor:
+      theme === "system"
+        ? [
+            { media: "(prefers-color-scheme: light)", color: LIGHT },
+            { media: "(prefers-color-scheme: dark)", color: DARK },
+          ]
+        : theme === "dark"
+          ? DARK
+          : LIGHT,
+  };
+}
 
 // Pages render per request so Next.js can attach the CSP nonce from middleware to its scripts.
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   await headers();
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="tr">
+    <html lang="tr" data-theme={theme === "system" ? undefined : theme}>
       <body>{children}</body>
     </html>
   );

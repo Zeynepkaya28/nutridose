@@ -81,6 +81,22 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## Güvenlik özeti
+
+| Katman | Nasıl korunuyor |
+|---|---|
+| **Giriş** | E-posta + şifre (kayıtta e-posta doğrulaması zorunlu; doğrulanmamış hesap giriş yapamaz). Alternatif: şifresiz e-posta bağlantısı, Sign in with Apple. |
+| **Şifre politikası** | En az 8 karakter, büyük + küçük harf + rakam (`config.toml` ve Dashboard; istemcide anında uyarı). Şifreler Supabase Auth'ta bcrypt ile saklanır; uygulama şifreyi hiçbir yere yazmaz/loglamaz. |
+| **Şifre değiştirme** | Profil › Güvenlik: mevcut şifre ayrı bir oturumda yeniden doğrulanır (`secure_password_change` açık), sonra diğer tüm cihazlardaki oturumlar kapatılır. |
+| **Şifremi unuttum** | 1 saat geçerli tek kullanımlık bağlantı; sıfırlama sonrası diğer oturumlar kapanır. Hesap var/yok bilgisi hiçbir yanıtta sızdırılmaz. |
+| **Oturum** | `@supabase/ssr` çerezleri, middleware her istekte token'ı doğrular/yeniler. "Tüm cihazlardan çıkış yap" tüm refresh token'ları iptal eder. Kaba kuvvet denemeleri Supabase Auth rate limit'leriyle sınırlanır. |
+| **Veri erişimi** | Her tabloda RLS: kullanıcı yalnızca kendi satırlarını görür/değiştirir (pgTAP ile iki kullanıcılı testler). Uygulama servis anahtarını yalnızca hesap silmede (sunucu) kullanır; anahtar istemci paketinde yok (CI kontrol eder). |
+| **Sağlık verisi (KVKK)** | Açık rıza olmadan veritabanı sağlık verisi yazmayı reddeder; veriler AB bölgesinde; hesap silme tüm satır ve dosyaları kaldırır. |
+| **Dosyalar** | Reçeteler private bucket'ta, yol `{user_id}/{uuid}.pdf` zorunlu, ≤ 5 MB, PDF imzası sunucuda doğrulanır. |
+| **API** | Zod doğrulaması, gövde boyutu sınırı, kullanıcı başına dakikada 30 analiz, kullanıcıya teknik hata gösterilmez. |
+| **Tarayıcı** | Nonce'lu CSP, HSTS, `X-Frame-Options: DENY`, nosniff, Permissions-Policy (yalnızca kamera), açık yönlendirme koruması (`safeNext`). |
+| **E-postalar** | Türkçe şablonlar (`supabase/templates`), production'da Dashboard'a girilmeli. |
+
 ## Native iOS istemcisi (Faz 7)
 
 `ios/` klasöründe SwiftUI istemcisi (XcodeGen + supabase-swift). Ayrıntılar ve kurulum: [ios/README.md](ios/README.md). Kod henüz derlenmedi (Windows ortamı). Native istemci için eklenen web uç noktası: `DELETE /api/account` (Bearer token ile hesap silme).
@@ -116,7 +132,8 @@ Supabase Branching (ücretli plan) açıldığında her PR için ayrı bir verit
 
 ## Kimlik doğrulama ve profil (Faz 5)
 
-- **E-posta magic link** (`/giris`): `signInWithOtp` → e-postadaki bağlantı → `/auth/callback` (PKCE kodu veya token hash) → oturum çerezi. Yerelde e-postalar Mailpit'e düşer: http://127.0.0.1:55324
+- **E-posta + şifre** (`/giris`): "Giriş yap" / "Kayıt ol". Kayıt sonrası doğrulama e-postası → `/auth/callback` → onboarding. Şifremi unuttum: `/sifremi-unuttum` → e-posta → `/sifre-yenile`. Profil › Güvenlik: şifre değiştir, tüm cihazlardan çıkış. Profil › Görünüm: Sistem / Açık / Koyu.
+- **E-posta bağlantısı (şifresiz, isteğe bağlı)**: kayıtlı hesaplar için `signInWithOtp` → e-postadaki bağlantı → `/auth/callback` (PKCE kodu veya token hash) → oturum çerezi. Yerelde e-postalar Mailpit'e düşer: http://127.0.0.1:55324
 - **Sign in with Apple**: kod hazır (`signInWithApple`), ancak bir Apple Developer hesabı gerektirir. Açmak için: Apple'da Services ID + Sign in with Apple anahtarı oluşturun → Supabase Dashboard › Authentication › Providers › Apple'a girin (yerelde `SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID` / `_SECRET` ve `config.toml`'da `enabled = true`) → Vercel'de `NEXT_PUBLIC_APPLE_SIGNIN_ENABLED=true`. Bu değişken yoksa düğme gösterilmez.
 - **Profil satırı**: `auth.users`'a eklenen her kullanıcı için `private.handle_new_user()` trigger'ı `profiles` satırı açar (`private` şeması Data API'de yoktur).
 - **Middleware**: oturumsuz ziyaretçi yalnızca `/giris`, `/auth/*`, `/kvkk`, `/api/*` (kendi 401'ini verir) ve PWA dosyalarına erişir; diğer her yol `/giris?next=…`'e yönlenir. `next` yalnızca site içi göreli yol olabilir.
