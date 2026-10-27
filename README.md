@@ -81,6 +81,10 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## Native iOS istemcisi (Faz 7)
+
+`ios/` klasöründe SwiftUI istemcisi (XcodeGen + supabase-swift). Ayrıntılar ve kurulum: [ios/README.md](ios/README.md). Kod henüz derlenmedi (Windows ortamı). Native istemci için eklenen web uç noktası: `DELETE /api/account` (Bearer token ile hesap silme).
+
 ## Yayın, güvenlik ve uyum (Faz 6)
 
 - **Açık rıza (KVKK)**: onboarding'in ilk adımı; aydınlatma metni `/kvkk` (veri sorumlusu bilgileri **doldurulup hukukçuya gösterilmeli**). Rıza `profiles.health_consent_at` + `health_consent_version`'da tutulur. **Rıza yoksa hiçbir sağlık verisi yazılamaz**: tüm sağlık tablolarının ve `prescriptions` bucket'ının insert/update politikaları `has_health_consent()` ister (RLS, uygulama dışından da geçerli). Metin değişirse `src/lib/consent.ts`'teki sürümü artırın; kullanıcılara yeniden sorulur.

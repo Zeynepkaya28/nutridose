@@ -1,0 +1,5 @@
+// Copy to Config.xcconfig (git-ignored) and fill in. Only public values: never put the secret key here.
+// In xcconfig files "//" starts a comment, so URLs use $() to break the slashes.
+SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
+SUPABASE_PUBLISHABLE_KEY = sb_publishable_...
+API_BASE_URL = https:/$()/your-app.vercel.app

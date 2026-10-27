@@ -1,0 +1,4 @@
+Config.xcconfig
+*.xcodeproj
+xcuserdata/
+DerivedData/
