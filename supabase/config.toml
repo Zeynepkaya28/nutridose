@@ -436,3 +436,24 @@ content_path = "./supabase/templates/email_change.html"
 [auth.email.template.reauthentication]
 subject = "NutriDose: doğrulama kodu"
 content_path = "./supabase/templates/reauthentication.html"
+
+# Production (Supabase project "nutridose", eu-central-1). Applied with:
+#   npx supabase config push --project-ref kpwbmdzogdvjgrkwcahq
+[remotes.production]
+project_id = "kpwbmdzogdvjgrkwcahq"
+
+[remotes.production.auth]
+site_url = "https://nutridose.vercel.app"
+additional_redirect_urls = ["https://nutridose.vercel.app/**", "https://nutridose-*-zeynep-beca.vercel.app/**", "nutridose://auth-callback"]
+
+[remotes.production.auth.email]
+# One email per address per minute in production (local dev uses 1s).
+max_frequency = "1m"
+
+[remotes.production.auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[remotes.production.storage.vector]
+# Vector buckets need a paid plan.
+enabled = false
