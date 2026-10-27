@@ -8,8 +8,9 @@ import type { Database } from "./types";
  * Refreshes the auth session cookie on every request and keeps signed-out visitors on the sign-in screen.
  * Route handlers under /api answer 401 themselves.
  */
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(request: NextRequest, requestHeaders: Headers = request.headers) {
+  const next = () => NextResponse.next({ request: { headers: requestHeaders } });
+  let response = next();
   if (!hasPublicSupabaseEnv()) return response;
 
   const { url, publishableKey } = getPublicSupabaseEnv();
@@ -20,7 +21,9 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        // Keep the forwarded headers (CSP nonce) and the updated cookie header.
+        requestHeaders.set("cookie", request.cookies.toString());
+        response = next();
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },

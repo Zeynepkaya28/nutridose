@@ -1,12 +1,16 @@
 -- RLS isolation test with two users. Run: npm run db:test
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(32);
 
 -- Two test users.
 insert into auth.users (id, instance_id, aud, role, email) values
   ('aaaaaaaa-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'a@test.local'),
   ('bbbbbbbb-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'b@test.local');
+
+-- Both test users give explicit consent (KVKK); C below does not.
+update public.profiles set health_consent_at = now(), health_consent_version = 'test'
+where user_id in ('aaaaaaaa-0000-4000-8000-000000000001','bbbbbbbb-0000-4000-8000-000000000002');
 
 -- Sign-up trigger created both profiles.
 select is((select count(*) from public.profiles where user_id in ('aaaaaaaa-0000-4000-8000-000000000001','bbbbbbbb-0000-4000-8000-000000000002')), 2::bigint, 'sign-up trigger creates profiles');
@@ -82,6 +86,24 @@ select is((select count(*) from public.analysis_findings where user_id = 'aaaaaa
 delete from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001';
 select is((select count(*) from public.meals where user_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 0::bigint, 'deleting user removes meals');
 select is((select count(*) from public.analysis_findings where user_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 0::bigint, 'deleting user removes findings');
+
+-- ── Consent and publishing ──
+insert into auth.users (id, instance_id, aud, role, email) values
+  ('cccccccc-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'c@test.local');
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-4000-8000-000000000003","role":"authenticated"}', true);
+select throws_ok($$insert into public.meals (label) values ('no consent')$$, '42501', null, 'no health data without consent');
+select throws_ok($$insert into public.user_conditions (condition_code) values ('renal')$$, '42501', null, 'no conditions without consent');
+select lives_ok($$update public.profiles set health_consent_at = now(), health_consent_version = 'test' where user_id = 'cccccccc-0000-4000-8000-000000000003'$$, 'user can give consent');
+select lives_ok($$insert into public.meals (label) values ('with consent')$$, 'health data allowed after consent');
+reset role;
+
+insert into public.interactions (id, substance_a, substance_b, severity, evidence_source) values
+  ('dddddddd-0000-4000-8000-000000000001', 'cccccccc-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'high', 'TEST');
+select throws_ok($$update public.interactions set status = 'published' where id = 'dddddddd-0000-4000-8000-000000000001'$$, '23514', null, 'cannot publish without reviewed_at');
+set local role authenticated;
+select is((select count(*) from public.interactions where id = 'dddddddd-0000-4000-8000-000000000001'), 0::bigint, 'draft interactions are hidden');
+reset role;
 
 select * from finish();
 rollback;

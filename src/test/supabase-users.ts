@@ -31,7 +31,10 @@ export interface TestUser {
   client: SupabaseClient<Database>;
 }
 
-export async function createTestUser(admin: SupabaseClient<Database>): Promise<TestUser> {
+export async function createTestUser(
+  admin: SupabaseClient<Database>,
+  options: { consent?: boolean } = {},
+): Promise<TestUser> {
   const email = `test-${randomUUID()}@nutridose.test`;
   const password = randomBytes(24).toString("base64url");
   const { data: created, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
@@ -42,6 +45,14 @@ export async function createTestUser(admin: SupabaseClient<Database>): Promise<T
   });
   const { data: session, error: signInError } = await client.auth.signInWithPassword({ email, password });
   if (signInError || !session.session) throw signInError ?? new Error("signIn failed");
+
+  if (options.consent !== false) {
+    const { error: consentError } = await client
+      .from("profiles")
+      .update({ health_consent_at: new Date().toISOString(), health_consent_version: "test" })
+      .eq("user_id", created.user.id);
+    if (consentError) throw consentError;
+  }
 
   return { id: created.user.id, accessToken: session.session.access_token, client };
 }

@@ -81,6 +81,35 @@ Bu proje Supabase'in varsayılan 5432x portlarını değil **5532x** aralığın
 
 Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında yalnızca `unused_index` (INFO) notları çıkar; bu indeksler foreign key ve RLS sorguları için bilinçli olarak eklendi.
 
+## Yayın, güvenlik ve uyum (Faz 6)
+
+- **Açık rıza (KVKK)**: onboarding'in ilk adımı; aydınlatma metni `/kvkk` (veri sorumlusu bilgileri **doldurulup hukukçuya gösterilmeli**). Rıza `profiles.health_consent_at` + `health_consent_version`'da tutulur. **Rıza yoksa hiçbir sağlık verisi yazılamaz**: tüm sağlık tablolarının ve `prescriptions` bucket'ının insert/update politikaları `has_health_consent()` ister (RLS, uygulama dışından da geçerli). Metin değişirse `src/lib/consent.ts`'teki sürümü artırın; kullanıcılara yeniden sorulur.
+- **Etkileşim yayın kuralı**: `interactions.status` (`draft`/`published`). `published` olmak için `evidence_source` ve `reviewed_at` zorunlu (CHECK `interactions_published_requires_review`). Kullanıcılar yalnızca yayınlanmış kayıtları görür. `seed.sql`'deki ÖRNEK kayıtlar yalnızca yerel/preview için yayınlanmış işaretlenir; production'a seed uygulanmaz → **production kataloğu, klinik olarak doğrulanmış veri girilene kadar boştur.**
+- **Güvenlik başlıkları**: `next.config.ts` → HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy (yalnızca kamera, kendi sayfalarımızda). CSP her istekte yeni nonce ile `src/middleware.ts`'te (statik CSP Next.js betikleri için `unsafe-inline` gerektirirdi).
+- **Hata izleme**: `src/instrumentation.ts` (`onRequestError`) sunucu hatalarını, `/api/client-error` tarayıcı hatalarını tek satır JSON olarak Vercel runtime log'larına yazar (istek gövdesi/sağlık verisi yok). Harici bir servis (Sentry vb.) istenirse buraya bağlanır.
+- **Yapılandırma eksikse**: Supabase değişkenleri olmayan bir deploy çökmez, `/kurulum` sayfasını gösterir.
+- **Tıbbi tavsiye notu**: tüm analiz ekranlarında ve giriş/onboarding'de.
+
+### CI/CD (`.github/workflows/ci.yml`)
+
+| Job | Ne zaman | Ne yapar |
+|---|---|---|
+| `verify` | her PR ve `main` push | lint, typecheck, birim testleri (%100 domain kapsamı), build, istemci paketinde gizli anahtar kontrolü |
+| `integration` | her PR ve `main` push | CI içinde yerel Supabase → pgTAP RLS testleri, advisors (`--fail-on warn`), API entegrasyon testleri |
+| `migrate` | `main` push, testler geçtikten sonra | `supabase db push` ile migration'ları production'a uygular (seed hariç) |
+
+`migrate` için GitHub'da: **Variables** › `SUPABASE_PROJECT_REF`; **Secrets** › `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`; **Environments** › `production`. Vercel, `main`'e merge edilince production'a, PR'larda preview'a otomatik deploy eder.
+
+### Preview → Supabase branch
+
+Supabase Branching (ücretli plan) açıldığında her PR için ayrı bir veritabanı (migration + seed) oluşur ve Vercel entegrasyonu preview deploy'a o branch'in anahtarlarını verir. Branching yokken preview deploy'lar production veritabanına bağlanır; bu durumda preview env değişkenlerini ayrı bir "staging" projesine yönlendirin.
+
+## Faz 6 kabul kriterleri
+
+- [ ] Production URL çalışıyor — Vercel projesi hazır; production Supabase projesi oluşturulamadı (ücretsiz plan 2 aktif proje sınırı). Bkz. "Production kurulumu".
+- [x] Advisors temiz (yerel; CI'da `--fail-on warn`)
+- [x] Rıza alınmadan sağlık verisi kaydedilmiyor — RLS + pgTAP + API testi (403)
+
 ## Kimlik doğrulama ve profil (Faz 5)
 
 - **E-posta magic link** (`/giris`): `signInWithOtp` → e-postadaki bağlantı → `/auth/callback` (PKCE kodu veya token hash) → oturum çerezi. Yerelde e-postalar Mailpit'e düşer: http://127.0.0.1:55324

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "@/ui/tokens.css";
 import "@/ui/components.css";
 
@@ -20,7 +21,9 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+// Pages render per request so Next.js can attach the CSP nonce from middleware to its scripts.
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  await headers();
   return (
     <html lang="tr">
       <body>{children}</body>

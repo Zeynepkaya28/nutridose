@@ -11,6 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!viewer) redirect("/giris");
   const account = await getAccountState(viewer);
   if (!account.exists) redirect("/auth/cikis");
+  if (!account.consented) redirect("/hosgeldin?adim=0");
   if (!account.onboarded) redirect("/hosgeldin");
 
   return (

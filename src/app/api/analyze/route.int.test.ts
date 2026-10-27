@@ -162,6 +162,18 @@ describe("POST /api/analyze", () => {
     ]);
   });
 
+  it("no health data is saved without explicit consent (KVKK)", async () => {
+    const dave = await createTestUser(admin, { consent: false });
+    try {
+      const result = await call({ inputKind: "manual", payload: { text: "muz" } }, dave);
+      expect(result).toMatchObject({ status: 403, json: { error: MESSAGES.consentRequired } });
+      const runs = await admin.from("analysis_runs").select("id").eq("user_id", dave.id);
+      expect(runs.data).toEqual([]);
+    } finally {
+      await deleteTestUser(admin, dave);
+    }
+  });
+
   it("401 without a session, 401 with a bad token", async () => {
     expect(await call({ inputKind: "manual", payload: { text: "muz" } })).toMatchObject({
       status: 401,

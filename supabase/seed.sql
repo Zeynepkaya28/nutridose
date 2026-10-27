@@ -64,6 +64,11 @@ values
    'ÖRNEK kayıt – öneri klinik kaynaktan girilecek.',
    'ÖRNEK – klinik doğrulama gerekli', null);
 
+-- DEVELOPMENT ONLY: publish the sample rows so the app can be exercised locally and on preview
+-- branches. reviewed_at here only satisfies the publishing CHECK; these rows are NOT clinically
+-- reviewed (evidence_source says so). seed.sql is never applied to production (`supabase db push`).
+update public.interactions set status = 'published', reviewed_at = date '2026-10-26';
+
 -- Placeholder limit (value is arbitrary, only for exercising DoseLimitHandler in development).
 insert into public.nutrient_limits (substance_id, condition_code, upper_limit, unit, period, source) values
   ('10000000-0000-4000-8000-000000000007', 'renal', 1, 'g', 'day', 'ÖRNEK – klinik doğrulama gerekli');

@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { CONDITION_CODES, type ConditionCode, type FindingStatus, type AnalysisStep, type Severity } from "@/domain/types";
+import { CONSENT_VERSION } from "@/lib/consent";
 import { createClient } from "@/lib/supabase/server";
 import { daysAgoIso, startOfDayIso } from "@/lib/time";
 
@@ -19,12 +20,18 @@ export type Viewer = NonNullable<Awaited<ReturnType<typeof getViewer>>>;
 export const getAccountState = cache(async (viewer: Viewer) => {
   const { data, error } = await viewer.supabase
     .from("profiles")
-    .select("display_name, onboarded_at")
+    .select("display_name, onboarded_at, health_consent_at, health_consent_version")
     .eq("user_id", viewer.userId)
     .maybeSingle();
   if (error) throw new Error(`profiles: ${error.message}`);
   // No profile row: the account was deleted while this session token was still valid.
-  return { exists: Boolean(data), displayName: data?.display_name ?? null, onboarded: Boolean(data?.onboarded_at) };
+  return {
+    exists: Boolean(data),
+    displayName: data?.display_name ?? null,
+    onboarded: Boolean(data?.onboarded_at),
+    // Consent to an older text version must be renewed.
+    consented: Boolean(data?.health_consent_at) && data?.health_consent_version === CONSENT_VERSION,
+  };
 });
 
 function check<T>(result: { data: T | null; error: { message: string } | null }, what: string): T {

@@ -21,5 +21,6 @@ export const MESSAGES = {
   prescriptionTooLarge: "Reçete dosyası 5 MB'tan büyük olamaz.",
   prescriptionNotPdf: "Dosya geçerli bir PDF değil.",
   prescriptionUnreadable: "PDF okunamadı. Taranmış (fotoğraf) reçeteler henüz desteklenmiyor.",
+  consentRequired: "Sağlık verilerinizin işlenmesi için açık rızanız gerekiyor. Profil ayarlarından onay verebilirsiniz.",
   unexpected: "Analiz şu anda yapılamadı. Lütfen biraz sonra tekrar deneyin.",
 } as const;

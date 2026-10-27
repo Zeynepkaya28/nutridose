@@ -12,7 +12,8 @@ import { MEAL_LABELS } from "@/lib/time";
 import { analyze, toErrorResult } from "@/server/analyze";
 import { MESSAGES } from "@/server/errors";
 import { createLogger } from "@/server/log";
-import { getViewer, type Viewer } from "@/server/queries";
+import { getAccountState, getViewer, type Viewer } from "@/server/queries";
+import { CONSENT_VERSION } from "@/lib/consent";
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -198,6 +199,24 @@ export async function deleteMyAccount(): Promise<ActionResult> {
   await viewer.supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
   revalidatePath("/", "layout");
   redirect("/giris?silindi=1");
+}
+
+/** Records explicit consent (KVKK) to process health data. */
+export async function giveConsent(form: FormData): Promise<void> {
+  const viewer = await requireViewer();
+  if (!viewer) redirect("/giris");
+  if (form.get("consent") !== "on") redirect("/hosgeldin?adim=0&hata=1");
+  const { error } = await viewer.supabase
+    .from("profiles")
+    .update({ health_consent_at: new Date().toISOString(), health_consent_version: CONSENT_VERSION })
+    .eq("user_id", viewer.userId);
+  if (error) {
+    createLogger({ action: "giveConsent" }).error("update failed", { error });
+    redirect("/hosgeldin?adim=0&hata=1");
+  }
+  revalidatePath("/", "layout");
+  const account = await getAccountState(viewer);
+  redirect(account.onboarded ? "/" : "/hosgeldin?adim=1");
 }
 
 /** Marks onboarding as finished. */

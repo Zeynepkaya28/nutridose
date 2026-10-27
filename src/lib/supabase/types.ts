@@ -186,6 +186,7 @@ export type Database = {
           mechanism: string | null;
           reviewed_at: string | null;
           severity: Database["public"]["Enums"]["severity"];
+          status: string;
           substance_a: string;
           substance_b: string;
         };
@@ -198,6 +199,7 @@ export type Database = {
           mechanism?: string | null;
           reviewed_at?: string | null;
           severity: Database["public"]["Enums"]["severity"];
+          status?: string;
           substance_a: string;
           substance_b: string;
         };
@@ -209,6 +211,7 @@ export type Database = {
           mechanism?: string | null;
           reviewed_at?: string | null;
           severity?: Database["public"]["Enums"]["severity"];
+          status?: string;
           substance_a?: string;
           substance_b?: string;
         };
@@ -419,6 +422,8 @@ export type Database = {
         Row: {
           created_at: string;
           display_name: string | null;
+          health_consent_at: string | null;
+          health_consent_version: string | null;
           onboarded_at: string | null;
           user_id: string;
         };
@@ -426,12 +431,16 @@ export type Database = {
         Insert: {
           created_at?: string;
           display_name?: string | null;
+          health_consent_at?: string | null;
+          health_consent_version?: string | null;
           onboarded_at?: string | null;
           user_id?: string;
         };
         Update: {
           created_at?: string;
           display_name?: string | null;
+          health_consent_at?: string | null;
+          health_consent_version?: string | null;
           onboarded_at?: string | null;
           user_id?: string;
         };
@@ -564,6 +573,7 @@ export type Database = {
         Args: { p_limit?: number; p_window_seconds?: number };
         Returns: boolean;
       };
+      has_health_consent: { Args: Record<PropertyKey, never>; Returns: boolean };
       normalize_search_text: { Args: { p_text: string }; Returns: string };
       save_analysis_run: {
         Args: {

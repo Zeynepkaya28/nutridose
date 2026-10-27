@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, types, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: No server secret in the client bundle
+        run: npm run check:bundle
+
+  integration:
+    name: Database and API against local Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Start Supabase (migrations + seed)
+        run: npx supabase start
+      - name: Write .env.local from the local stack
+        run: |
+          eval "$(npx supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY|SECRET_KEY)=')"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+          } > .env.local
+      - name: RLS tests (pgTAP)
+        run: npm run db:test
+      - name: Security & performance advisors
+        run: npx supabase db advisors --local --level warn --fail-on warn
+      - name: API integration tests
+        run: npm run test:integration
+
+  migrate:
+    name: Apply migrations to production
+    needs: [verify, integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SUPABASE_PROJECT_REF != ''
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+      # Applies supabase/migrations only; seed.sql (sample data) is never pushed to production.
+      - run: npx supabase db push

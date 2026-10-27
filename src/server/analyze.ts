@@ -78,6 +78,8 @@ export async function analyze(deps: AnalyzeDeps, request: AnalyzeRequest): Promi
   if (saveError) {
     // Composite FK (meal_id, user_id): unknown meal or someone else's meal.
     if (saveError.code === "23503" && request.mealId) throw new UserFacingError(MESSAGES.mealNotFound, 404);
+    // RLS: health data can only be written after explicit consent.
+    if (saveError.code === "42501") throw new UserFacingError(MESSAGES.consentRequired, 403);
     throw saveError;
   }
 

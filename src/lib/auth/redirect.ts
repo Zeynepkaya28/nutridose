@@ -13,6 +13,7 @@ export function isPublicPath(pathname: string): boolean {
     pathname.startsWith("/api/") ||
     pathname.startsWith("/dev/") ||
     pathname === "/kvkk" ||
+    pathname === "/kurulum" ||
     pathname === "/manifest.webmanifest" ||
     pathname.startsWith("/pwa-icon/") ||
     pathname === "/icon" ||

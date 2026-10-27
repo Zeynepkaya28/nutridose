@@ -2,6 +2,7 @@
 // Refuses to run unless NODE_ENV=development AND Supabase is local. No password is involved:
 // the admin API issues a one-time magic-link token that is verified straight away.
 import { NextResponse } from "next/server";
+import { CONSENT_VERSION } from "@/lib/consent";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 const DEMO_EMAIL = "demo@nutridose.test";
@@ -28,7 +29,13 @@ export async function GET(request: Request) {
     // First run: give the demo user the reference scenario profile.
     await admin
       .from("profiles")
-      .upsert({ user_id: userId, display_name: "Demo", onboarded_at: new Date().toISOString() });
+      .upsert({
+        user_id: userId,
+        display_name: "Demo",
+        onboarded_at: new Date().toISOString(),
+        health_consent_at: new Date().toISOString(),
+        health_consent_version: CONSENT_VERSION,
+      });
     await admin.from("user_conditions").upsert({ user_id: userId, condition_code: "cardiology" });
     await admin
       .from("user_medications")
