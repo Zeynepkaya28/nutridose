@@ -7,3 +7,8 @@
 [build.environment]
   NODE_VERSION = "22"
   NEXT_TELEMETRY_DISABLED = "1"
+
+# Runs Next.js server pages, API routes and middleware as Netlify Functions.
+# Listed explicitly because upload/CLI deploys do not always auto-install it.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
