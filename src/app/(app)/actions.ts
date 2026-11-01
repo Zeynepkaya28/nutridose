@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/server";
 import { deleteAccount } from "@/server/account";
 import { changePassword } from "@/server/password";
 import { authErrorMessage } from "@/lib/auth/password";
@@ -68,6 +67,33 @@ export async function submitAnalysis(input: unknown): Promise<ActionResult<{ run
     if (mealId) await viewer.supabase.from("meals").delete().eq("id", mealId);
     return { ok: false, error: toErrorResult(error, logger).message };
   }
+}
+
+// ── Skipped meals ──────────────────────────────────────────
+
+const MealLabelSchema = z.enum(MEAL_LABELS as [string, ...string[]]);
+
+/** Records that a meal was not eaten today ("Kahvaltı yapmadım"), so the day can continue with the next one. */
+export async function skipMeal(label: string): Promise<ActionResult> {
+  const viewer = await requireViewer();
+  if (!viewer) return { ok: false, error: MESSAGES.unauthenticated };
+  const parsed = MealLabelSchema.safeParse(label);
+  if (!parsed.success) return { ok: false, error: MESSAGES.invalidBody };
+  const { error } = await viewer.supabase.from("meals").insert({ label: parsed.data, skipped: true });
+  if (error) return failed(error, "skipMeal");
+  revalidatePath("/", "layout");
+  return { ok: true, data: undefined };
+}
+
+/** Removes a "skipped" mark (only skipped meals can be removed this way). */
+export async function undoSkipMeal(id: string): Promise<ActionResult> {
+  const viewer = await requireViewer();
+  if (!viewer) return { ok: false, error: MESSAGES.unauthenticated };
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: MESSAGES.invalidBody };
+  const { error } = await viewer.supabase.from("meals").delete().eq("id", id).eq("skipped", true);
+  if (error) return failed(error, "undoSkipMeal");
+  revalidatePath("/", "layout");
+  return { ok: true, data: undefined };
 }
 
 // ── Medications ────────────────────────────────────────────
@@ -193,7 +219,7 @@ export async function deleteMyAccount(): Promise<ActionResult> {
   const viewer = await requireViewer();
   if (!viewer) return { ok: false, error: MESSAGES.unauthenticated };
   try {
-    await deleteAccount(viewer.supabase, createAdminClient(), viewer.userId);
+    await deleteAccount(viewer.supabase, viewer.userId);
   } catch (error) {
     createLogger({ action: "deleteMyAccount", userId: viewer.userId }).error("account deletion failed", { error });
     return { ok: false, error: "Hesap silinemedi. Lütfen tekrar deneyin; sorun sürerse bize yazın." };

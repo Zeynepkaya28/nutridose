@@ -22,6 +22,16 @@ export async function GET(request: NextRequest) {
     error = new Error("missing code");
   }
 
+  // The verification link was opened in another browser/app (e.g. the mail app). Supabase already
+  // confirmed the address before redirecting here; only this browser has no session yet.
+  if (code && (error as { code?: string } | null)?.code === "pkce_code_verifier_not_found") {
+    createLogger({ route: "/auth/callback" }).info("link opened in another browser", { next });
+    const url = new URL("/giris", request.url);
+    if (next === "/sifre-yenile") url.searchParams.set("hata", "baglanti-tarayici");
+    else url.searchParams.set("dogrulandi", "1");
+    return NextResponse.redirect(url);
+  }
+
   if (error) {
     createLogger({ route: "/auth/callback" }).error("sign-in callback failed", { error });
     return NextResponse.redirect(new URL("/giris?hata=baglanti", request.url));

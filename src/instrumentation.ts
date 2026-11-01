@@ -1,5 +1,5 @@
 // Server error tracking: every unhandled error in a route, page or server action is logged as one
-// structured JSON line (visible in Vercel runtime logs and any log drain). No request body or health data.
+// structured JSON line (visible in Netlify function logs and any log drain). No request body or health data.
 import type { Instrumentation } from "next";
 
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {

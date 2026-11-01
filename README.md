@@ -4,7 +4,9 @@
 
 > NutriDose tıbbi tavsiye yerine geçmez.
 
-**Mimari:** Next.js 15 (App Router, TypeScript strict) → Vercel · Supabase → Postgres + Auth + Storage + RLS · Arayüz → Apple HIG (sistem fontu, sistem renkleri; SF Symbols web'e gömülmez).
+**Canlı uygulama:** https://nutridose.netlify.app · **Kaynak kod:** https://github.com/Zeynepkaya28/nutridose
+
+**Mimari:** Next.js 15 (App Router, TypeScript strict) → Netlify · Supabase → Postgres + Auth + Storage + RLS · Arayüz → Apple HIG (sistem fontu, sistem renkleri; SF Symbols web'e gömülmez).
 
 ## Klasör yapısı
 
@@ -41,7 +43,7 @@ npm run dev                     # http://localhost:3000
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `PUBLISHABLE_KEY` | tarayıcı + sunucu |
 | `SUPABASE_SECRET_KEY` | `SECRET_KEY` | **yalnızca sunucu** — asla `NEXT_PUBLIC_` önekiyle değil |
 
-`SUPABASE_SECRET_KEY` yalnızca `src/lib/supabase/server.ts` içindeki `createAdminClient()` tarafından okunur; bu dosya `server-only` ile işaretlidir, istemci bileşenine import edilirse build hata verir.
+`SUPABASE_SECRET_KEY` yalnızca yerel geliştirme ve testlerde (`createAdminClient()`, `/dev/giris`, entegrasyon testleri) kullanılır; production çalışma zamanında gerekmez. `src/lib/supabase/server.ts` `server-only` ile işaretlidir, istemci bileşenine import edilirse build hata verir.
 
 ## Script'ler
 
@@ -56,16 +58,21 @@ npm run dev                     # http://localhost:3000
 | `npm run db:lint` | şema tip/derleme kontrolü |
 | `npm run check:bundle` | build sonrası `.next/static` içinde gizli anahtar arar |
 
-## Vercel'e bağlama
+## Yayın (Netlify)
 
-1. Repo'yu GitHub'a gönderin, Vercel'de **Add New → Project → Import** ile içe aktarın (framework: Next.js, ayar gerekmez).
-2. Vercel'de **Integrations → Marketplace → Supabase** entegrasyonunu kurun ve projeye bağlayın. Entegrasyon Supabase URL ve anahtarlarını Production, Preview ve Development ortamlarına otomatik ekler.
-3. Entegrasyonun eklediği değişken adlarını kontrol edin; uygulama şu üç adı okur: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`. Farklı adla geldiyse aynı değerle bu adları ekleyin. `SUPABASE_SECRET_KEY` hiçbir ortamda `NEXT_PUBLIC_` önekli olmamalı.
-4. Yerelde Vercel değişkenlerini çekmek için: `npx vercel link` ve `npx vercel env pull .env.local`.
+Uygulama ücretsiz Netlify planında yayında: **https://nutridose.netlify.app** (Netlify ekibi "Zeyn.team", proje `nutridose`).
+`*.vercel.app` adresleri bazı Türkiye bağlantılarında engellendiği için yayın Vercel'den Netlify'a taşındı.
 
-### Preview ortamı → ayrı Supabase branch'i
+1. **Derleme**: `netlify.toml` → `npm run build`, yayın klasörü `.next`, Node 22. Next.js sunucu sayfaları, API'ler ve middleware `@netlify/plugin-nextjs` ile Netlify Functions olarak çalışır (eklenti `netlify.toml`'da açıkça tanımlı).
+2. **Ortam değişkenleri** (Netlify › Project configuration › Environment variables): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL=https://nutridose.netlify.app`. Sunucu gizli anahtarı (`SUPABASE_SECRET_KEY`) çalışma zamanında **gerekmez**: hesap silme kullanıcının kendi oturumuyla `delete_my_account()` fonksiyonunu çağırır.
+3. **Ziyaretçi erişimi**: Project configuration › Access & security › Visitor access › Production visibility = **Public** (yeni projelerde varsayılan *Private*'tır).
+4. **Otomatik yayın**: Netlify › Project configuration › Build & deploy › Link repository ile `Zeynepkaya28/nutridose` reposu bağlanırsa her `main` push'u otomatik yayınlanır. Bağlanana kadar yayın elle yapılır (`npx netlify-cli deploy --build --prod`).
+5. **Supabase Auth adresleri**: `supabase/config.toml` › `[remotes.production.auth]` (site URL ve izinli yönlendirmeler) → `npx supabase config push --project-ref kpwbmdzogdvjgrkwcahq`. Ücretsiz planda Supabase'in varsayılan e-posta göndericisi özel şablonlara izin vermez (Türkçe şablonlar için kendi SMTP'nizi bağlayın).
 
-Preview deploy'ları production veritabanına **yazmamalı**. Supabase projesinde **Branching**'i açın ve GitHub entegrasyonunu bağlayın: her pull request için Supabase ayrı bir preview branch'i (kendi veritabanı + `supabase/migrations` uygulanmış hâli) açar, Vercel entegrasyonu da o PR'ın Preview deploy'una bu branch'in URL/anahtarlarını verir. Production yalnızca ana Supabase projesine bağlı kalır. (Faz 6'da CI ile doğrulanacak.)
+### Başlangıç kataloğu (production)
+
+`supabase/catalog/starter_catalog.sql`: Türkiye'de yaygın ilaçlar (ör. Coumadin, Euthyrox, Glifor, Delix, Cipro), sık tüketilen besinler ve **kaynaklı** ilaç–besin etkileşimleri (her satırda ABD prospektüsü / KÜB / NIH bölümü yazılı). Besin miktarları bilinçli olarak boş bırakıldı. Tekrar çalıştırmak güvenlidir. Production'a uygulama: Supabase SQL Editor'da dosyayı çalıştırın.
+**Her kaydın bir eczacı veya hekim tarafından gözden geçirilmesi gerekir**; `evidence_source` alanında "uzman onayı bekliyor" yazar.
 
 ## Yerel portlar
 
@@ -104,9 +111,9 @@ Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında y
 ## Yayın, güvenlik ve uyum (Faz 6)
 
 - **Açık rıza (KVKK)**: onboarding'in ilk adımı; aydınlatma metni `/kvkk` (veri sorumlusu bilgileri **doldurulup hukukçuya gösterilmeli**). Rıza `profiles.health_consent_at` + `health_consent_version`'da tutulur. **Rıza yoksa hiçbir sağlık verisi yazılamaz**: tüm sağlık tablolarının ve `prescriptions` bucket'ının insert/update politikaları `has_health_consent()` ister (RLS, uygulama dışından da geçerli). Metin değişirse `src/lib/consent.ts`'teki sürümü artırın; kullanıcılara yeniden sorulur.
-- **Etkileşim yayın kuralı**: `interactions.status` (`draft`/`published`). `published` olmak için `evidence_source` ve `reviewed_at` zorunlu (CHECK `interactions_published_requires_review`). Kullanıcılar yalnızca yayınlanmış kayıtları görür. `seed.sql`'deki ÖRNEK kayıtlar yalnızca yerel/preview için yayınlanmış işaretlenir; production'a seed uygulanmaz → **production kataloğu, klinik olarak doğrulanmış veri girilene kadar boştur.**
+- **Etkileşim yayın kuralı**: `interactions.status` (`draft`/`published`). `published` olmak için `evidence_source` ve `reviewed_at` zorunlu (CHECK `interactions_published_requires_review`). Kullanıcılar yalnızca yayınlanmış kayıtları görür. `seed.sql`'deki ÖRNEK kayıtlar yalnızca yerel/preview için yayınlanmış işaretlenir; production'a seed uygulanmaz; production kataloğu `supabase/catalog/starter_catalog.sql`'den gelir (kaynaklı, uzman onayı bekliyor).
 - **Güvenlik başlıkları**: `next.config.ts` → HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy (yalnızca kamera, kendi sayfalarımızda). CSP her istekte yeni nonce ile `src/middleware.ts`'te (statik CSP Next.js betikleri için `unsafe-inline` gerektirirdi).
-- **Hata izleme**: `src/instrumentation.ts` (`onRequestError`) sunucu hatalarını, `/api/client-error` tarayıcı hatalarını tek satır JSON olarak Vercel runtime log'larına yazar (istek gövdesi/sağlık verisi yok). Harici bir servis (Sentry vb.) istenirse buraya bağlanır.
+- **Hata izleme**: `src/instrumentation.ts` (`onRequestError`) sunucu hatalarını, `/api/client-error` tarayıcı hatalarını tek satır JSON olarak Netlify function log'larına yazar (istek gövdesi/sağlık verisi yok). Harici bir servis (Sentry vb.) istenirse buraya bağlanır.
 - **Yapılandırma eksikse**: Supabase değişkenleri olmayan bir deploy çökmez, `/kurulum` sayfasını gösterir.
 - **Tıbbi tavsiye notu**: tüm analiz ekranlarında ve giriş/onboarding'de.
 
@@ -118,15 +125,15 @@ Advisors: `npx supabase db advisors --local --level info`. Yeni veritabanında y
 | `integration` | her PR ve `main` push | CI içinde yerel Supabase → pgTAP RLS testleri, advisors (`--fail-on warn`), API entegrasyon testleri |
 | `migrate` | `main` push, testler geçtikten sonra | `supabase db push` ile migration'ları production'a uygular (seed hariç) |
 
-`migrate` için GitHub'da: **Variables** › `SUPABASE_PROJECT_REF`; **Secrets** › `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`; **Environments** › `production`. Vercel, `main`'e merge edilince production'a, PR'larda preview'a otomatik deploy eder.
+`migrate` için GitHub'da: **Variables** › `SUPABASE_PROJECT_REF`; **Secrets** › `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`; **Environments** › `production`. Netlify'a repo bağlandığında `main` production'a, PR'lar deploy preview'a otomatik yayınlanır.
 
 ### Preview → Supabase branch
 
-Supabase Branching (ücretli plan) açıldığında her PR için ayrı bir veritabanı (migration + seed) oluşur ve Vercel entegrasyonu preview deploy'a o branch'in anahtarlarını verir. Branching yokken preview deploy'lar production veritabanına bağlanır; bu durumda preview env değişkenlerini ayrı bir "staging" projesine yönlendirin.
+Supabase Branching (ücretli plan) açıldığında her PR için ayrı bir veritabanı (migration + seed) oluşur ve preview deploy o branch'in anahtarlarıyla çalıştırılabilir. Branching yokken preview deploy'lar production veritabanına bağlanır; bu durumda preview env değişkenlerini ayrı bir "staging" projesine yönlendirin.
 
 ## Faz 6 kabul kriterleri
 
-- [ ] Production URL çalışıyor — Vercel projesi hazır; production Supabase projesi oluşturulamadı (ücretsiz plan 2 aktif proje sınırı). Bkz. "Production kurulumu".
+- [x] Production URL çalışıyor — https://nutridose.netlify.app (Supabase projesi `nutridose`, Frankfurt)
 - [x] Advisors temiz (yerel; CI'da `--fail-on warn`)
 - [x] Rıza alınmadan sağlık verisi kaydedilmiyor — RLS + pgTAP + API testi (403)
 
@@ -134,7 +141,7 @@ Supabase Branching (ücretli plan) açıldığında her PR için ayrı bir verit
 
 - **E-posta + şifre** (`/giris`): "Giriş yap" / "Kayıt ol". Kayıt sonrası doğrulama e-postası → `/auth/callback` → onboarding. Şifremi unuttum: `/sifremi-unuttum` → e-posta → `/sifre-yenile`. Profil › Güvenlik: şifre değiştir, tüm cihazlardan çıkış. Profil › Görünüm: Sistem / Açık / Koyu.
 - **E-posta bağlantısı (şifresiz, isteğe bağlı)**: kayıtlı hesaplar için `signInWithOtp` → e-postadaki bağlantı → `/auth/callback` (PKCE kodu veya token hash) → oturum çerezi. Yerelde e-postalar Mailpit'e düşer: http://127.0.0.1:55324
-- **Sign in with Apple**: kod hazır (`signInWithApple`), ancak bir Apple Developer hesabı gerektirir. Açmak için: Apple'da Services ID + Sign in with Apple anahtarı oluşturun → Supabase Dashboard › Authentication › Providers › Apple'a girin (yerelde `SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID` / `_SECRET` ve `config.toml`'da `enabled = true`) → Vercel'de `NEXT_PUBLIC_APPLE_SIGNIN_ENABLED=true`. Bu değişken yoksa düğme gösterilmez.
+- **Sign in with Apple**: kod hazır (`signInWithApple`), ancak bir Apple Developer hesabı gerektirir. Açmak için: Apple'da Services ID + Sign in with Apple anahtarı oluşturun → Supabase Dashboard › Authentication › Providers › Apple'a girin (yerelde `SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID` / `_SECRET` ve `config.toml`'da `enabled = true`) → Netlify'da `NEXT_PUBLIC_APPLE_SIGNIN_ENABLED=true`. Bu değişken yoksa düğme gösterilmez.
 - **Profil satırı**: `auth.users`'a eklenen her kullanıcı için `private.handle_new_user()` trigger'ı `profiles` satırı açar (`private` şeması Data API'de yoktur).
 - **Middleware**: oturumsuz ziyaretçi yalnızca `/giris`, `/auth/*`, `/kvkk`, `/api/*` (kendi 401'ini verir) ve PWA dosyalarına erişir; diğer her yol `/giris?next=…`'e yönlenir. `next` yalnızca site içi göreli yol olabilir.
 - **Onboarding** (`/hosgeldin`, 3 adım): tedavi stratejileri → alerji/intolerans → ilaçlar → `profiles.onboarded_at`. Bitirmeyen kullanıcı uygulama ekranlarına giremez.
@@ -223,5 +230,5 @@ Klinik kurallar hakkında:
 ## Faz 0 kabul kriterleri
 
 - [x] `npm run dev` açılıyor
-- [ ] Vercel preview deploy yeşil — GitHub repo + Vercel import sonrası
+- [x] Production deploy yeşil — Netlify (https://nutridose.netlify.app)
 - [x] Gizli anahtar istemci paketinde yok — `npm run build && npm run check:bundle`

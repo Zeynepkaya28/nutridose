@@ -43,6 +43,8 @@ export interface MealSummary {
   id: string;
   label: string | null;
   eatenAt: string;
+  /** The user marked this meal as not eaten ("Atladım"). */
+  skipped: boolean;
   items: string[];
   latestRun: { id: string; requiresAlert: boolean } | null;
 }
@@ -51,7 +53,7 @@ export async function getMeals(viewer: Viewer, sinceIso: string): Promise<MealSu
   const rows = check(
     await viewer.supabase
       .from("meals")
-      .select("id, label, eaten_at, meal_items ( raw_text ), analysis_runs ( id, requires_alert, created_at )")
+      .select("id, label, eaten_at, skipped, meal_items ( raw_text ), analysis_runs ( id, requires_alert, created_at )")
       .gte("eaten_at", sinceIso)
       .order("eaten_at", { ascending: false }),
     "meals",
@@ -62,6 +64,7 @@ export async function getMeals(viewer: Viewer, sinceIso: string): Promise<MealSu
       id: row.id,
       label: row.label,
       eatenAt: row.eaten_at,
+      skipped: row.skipped,
       items: row.meal_items.map((i) => i.raw_text),
       latestRun: runs[0] ? { id: runs[0].id, requiresAlert: runs[0].requires_alert } : null,
     };

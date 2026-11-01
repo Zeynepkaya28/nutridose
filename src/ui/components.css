@@ -1071,3 +1071,9 @@ p a,
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Four longer choices (e.g. meal names): two per row so each one stays easy to tap on a phone. */
+.segmented--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

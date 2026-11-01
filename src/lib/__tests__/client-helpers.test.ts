@@ -24,11 +24,19 @@ describe("validatePrescriptionFile", () => {
     expect(validatePrescriptionFile({ type: "application/pdf", size: MAX_PRESCRIPTION_BYTES })).toBeNull();
   });
   it.each([
-    [{ type: "image/png", size: 10 }, "Lütfen PDF formatında bir reçete seçin."],
+    [{ type: "image/png", size: 10 }, "Fotoğraf yüklenemiyor. e-Nabız veya eczaneden aldığınız PDF reçeteyi seçin ya da ilaç adlarını “Elle yaz” ile girin."],
+    [{ type: "text/plain", size: 10, name: "recete.txt" }, "Lütfen PDF formatında bir reçete seçin."],
+    [{ type: "", size: 10, name: "recete.docx" }, "Lütfen PDF formatında bir reçete seçin."],
     [{ type: "application/pdf", size: 0 }, "Seçilen dosya boş."],
     [{ type: "application/pdf", size: MAX_PRESCRIPTION_BYTES + 1 }, "Reçete dosyası 5 MB'tan büyük olamaz."],
   ])("rejects %o", (file, message) => {
     expect(validatePrescriptionFile(file)).toBe(message);
+  });
+  it.each([
+    { type: "", size: 10, name: "recete.pdf" },
+    { type: "application/octet-stream", size: 10, name: "E-RECETE.PDF" },
+  ])("accepts a PDF whose type the phone did not report: %o", (file) => {
+    expect(validatePrescriptionFile(file)).toBeNull();
   });
   it("builds the storage path", () => {
     expect(prescriptionPath("u1", "f1")).toBe("u1/f1.pdf");

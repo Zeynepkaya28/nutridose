@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // pdf-parse (pdf.js) breaks when bundled; load it from node_modules at runtime instead.
   serverExternalPackages: ["pdf-parse"],
+  // pdf.js loads its worker by path at runtime, which file tracing cannot see. Ship it with the
+  // server functions that analyse prescriptions (Netlify functions and `next start`).
+  outputFileTracingIncludes: {
+    "/api/analyze": ["./node_modules/pdf-parse/dist/**/*", "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+    "/*": ["./node_modules/pdf-parse/dist/**/*", "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

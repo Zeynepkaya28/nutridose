@@ -9,7 +9,7 @@ Aynı Supabase backend'ini kullanan native istemci. Analiz için web'deki `POST 
 ```bash
 brew install xcodegen
 cd ios
-cp Config.example.xcconfig Config.xcconfig   # Supabase URL, publishable key, Vercel URL
+cp Config.example.xcconfig Config.xcconfig   # Supabase URL, publishable key, web app URL (https://nutridose.netlify.app)
 xcodegen                                     # NutriDose.xcodeproj üretir
 open NutriDose.xcodeproj
 ```

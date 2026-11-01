@@ -8,8 +8,8 @@ export default function SetupPage() {
         NutriDose henüz yapılandırılmadı
       </h1>
       <div className="card t-body">
-        Bu kurulumda veritabanı bağlantısı tanımlı değil. Yönetici, Vercel ortam değişkenlerine
-        <code> NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> ve <code>SUPABASE_SECRET_KEY</code> değerlerini
+        Bu kurulumda veritabanı bağlantısı tanımlı değil. Yönetici, Netlify ortam değişkenlerine
+        <code> NEXT_PUBLIC_SUPABASE_URL</code> ve <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> değerlerini
         eklemeli ve yeniden dağıtmalıdır.
       </div>
     </main>

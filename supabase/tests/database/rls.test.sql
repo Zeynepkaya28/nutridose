@@ -1,7 +1,7 @@
 -- RLS isolation test with two users. Run: npm run db:test
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(37);
 
 -- Two test users.
 insert into auth.users (id, instance_id, aud, role, email) values
@@ -104,6 +104,21 @@ select throws_ok($$update public.interactions set status = 'published' where id 
 set local role authenticated;
 select is((select count(*) from public.interactions where id = 'dddddddd-0000-4000-8000-000000000001'), 0::bigint, 'draft interactions are hidden');
 reset role;
+
+-- ── Skipped meals and self-service deletion ──
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-4000-8000-000000000003","role":"authenticated"}', true);
+select lives_ok($$insert into public.meals (label, skipped) values ('Kahvaltı', true)$$, 'user can mark a meal as skipped');
+select is((select count(*) from public.meals where skipped), 1::bigint, 'skipped meal is stored');
+reset role;
+set local role anon;
+select throws_ok($$select public.delete_my_account()$$, '42501', null, 'anon cannot call delete_my_account');
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-4000-8000-000000000003","role":"authenticated"}', true);
+select lives_ok($$select public.delete_my_account()$$, 'user can delete their own account');
+reset role;
+select is((select count(*) from auth.users where id = 'cccccccc-0000-4000-8000-000000000003'), 0::bigint, 'delete_my_account removes only the caller');
 
 select * from finish();
 rollback;

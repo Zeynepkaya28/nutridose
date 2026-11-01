@@ -32,10 +32,12 @@ export default async function MealsPage() {
             {dayMeals.map((meal) => (
               <ListRow
                 key={meal.id}
-                icon={meal.latestRun?.requiresAlert ? "xmark.octagon.fill" : "fork.knife"}
-                iconColor={meal.latestRun?.requiresAlert ? "var(--system-red)" : "var(--system-orange)"}
+                icon={meal.skipped ? "minus.circle" : meal.latestRun?.requiresAlert ? "xmark.octagon.fill" : "fork.knife"}
+                iconColor={
+                  meal.skipped ? "var(--system-gray)" : meal.latestRun?.requiresAlert ? "var(--system-red)" : "var(--system-orange)"
+                }
                 title={meal.label ?? "Öğün"}
-                subtitle={meal.items.join(", ") || "Kalem yok"}
+                subtitle={meal.skipped ? "Atlandı" : meal.items.join(", ") || "Kalem yok"}
                 detail={formatTime(meal.eatenAt)}
                 accessory={meal.latestRun ? "chevron" : "none"}
                 href={meal.latestRun ? `/analiz/${meal.latestRun.id}` : undefined}

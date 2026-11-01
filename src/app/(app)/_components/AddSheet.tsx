@@ -13,7 +13,7 @@ import { submitAnalysis } from "../actions";
 
 type Mode = "menu" | "barcode" | "manual" | "prescription";
 
-const AddSheetContext = createContext<{ open: (mode?: Mode) => void } | null>(null);
+const AddSheetContext = createContext<{ open: (mode?: Mode, label?: MealLabel) => void } | null>(null);
 
 export function useAddSheet() {
   const context = useContext(AddSheetContext);
@@ -23,7 +23,12 @@ export function useAddSheet() {
 
 export function AddSheetProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const [mode, setMode] = useState<Mode | null>(null);
-  const open = useCallback((next: Mode = "menu") => setMode(next), []);
+  // Meal chosen from a slot on the Today screen (e.g. "Öğle yemeği"); otherwise guessed from the time.
+  const [presetLabel, setPresetLabel] = useState<MealLabel | undefined>(undefined);
+  const open = useCallback((next: Mode = "menu", label?: MealLabel) => {
+    setPresetLabel(label);
+    setMode(next);
+  }, []);
   const close = useCallback(() => setMode(null), []);
 
   const titles: Record<Mode, string> = {
@@ -43,8 +48,8 @@ export function AddSheetProvider({ userId, children }: { userId: string; childre
         initialDetent={mode === "barcode" ? "large" : "medium"}
       >
         {mode === "menu" ? <AddMenu onPick={setMode} /> : null}
-        {mode === "manual" ? <ManualForm onDone={close} /> : null}
-        {mode === "barcode" ? <BarcodeForm onDone={close} /> : null}
+        {mode === "manual" ? <ManualForm initialLabel={presetLabel} onDone={close} /> : null}
+        {mode === "barcode" ? <BarcodeForm initialLabel={presetLabel} onDone={close} /> : null}
         {mode === "prescription" ? <PrescriptionForm userId={userId} onDone={close} /> : null}
       </Sheet>
     </AddSheetContext.Provider>
@@ -70,7 +75,7 @@ export function AddButton({ variant = "icon" }: { variant?: "icon" | "block" }) 
 
 function AddMenu({ onPick }: { onPick: (mode: Mode) => void }) {
   return (
-    <ListSection footer="Barkod ve elle girişler bugünkü öğünlerinize eklenir. Reçeteler ayrı analiz edilir.">
+    <ListSection footer="Barkod ve elle girişler seçtiğiniz öğüne eklenir. Reçeteler ayrı analiz edilir.">
       <ListRow
         icon="barcode.viewfinder"
         iconColor="var(--system-blue)"
@@ -122,8 +127,8 @@ function useSubmit(onDone: () => void) {
 function MealLabelPicker({ value, onChange }: { value: MealLabel; onChange: (label: MealLabel) => void }) {
   return (
     <fieldset className="list-section" style={{ border: 0, padding: 0, margin: "0 0 24px" }}>
-      <legend className="list-section__header">Öğün</legend>
-      <div className="segmented">
+      <legend className="list-section__header">Hangi öğün?</legend>
+      <div className="segmented segmented--grid">
         {MEAL_LABELS.map((label) => (
           <label key={label}>
             <input type="radio" name="meal-label" value={label} checked={value === label} onChange={() => onChange(label)} />
@@ -144,9 +149,9 @@ function SubmitButton({ busy, label }: { busy: boolean; label: string }) {
   );
 }
 
-function ManualForm({ onDone }: { onDone: () => void }) {
+function ManualForm({ initialLabel, onDone }: { initialLabel?: MealLabel; onDone: () => void }) {
   const [text, setText] = useState("");
-  const [label, setLabel] = useState<MealLabel>(defaultMealLabel());
+  const [label, setLabel] = useState<MealLabel>(initialLabel ?? defaultMealLabel());
   const { busy, error, submit } = useSubmit(onDone);
   return (
     <form
@@ -179,10 +184,10 @@ function ManualForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-function BarcodeForm({ onDone }: { onDone: () => void }) {
+function BarcodeForm({ initialLabel, onDone }: { initialLabel?: MealLabel; onDone: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [code, setCode] = useState("");
-  const [label, setLabel] = useState<MealLabel>(defaultMealLabel());
+  const [label, setLabel] = useState<MealLabel>(initialLabel ?? defaultMealLabel());
   const [camera, setCamera] = useState<"starting" | "on" | "unavailable">("starting");
   const { busy, error, submit } = useSubmit(onDone);
   const submitRef = useRef(submit);
@@ -295,7 +300,7 @@ function PrescriptionForm({ userId, onDone }: { userId: string; onDone: () => vo
           <input
             id="prescription"
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,.pdf"
             onChange={(e) => {
               setError(null);
               setFile(e.target.files?.[0] ?? null);
@@ -305,7 +310,7 @@ function PrescriptionForm({ userId, onDone }: { userId: string; onDone: () => vo
           />
         </div>
         <p className="list-section__footer">
-          Dosya yalnızca sizin erişebildiğiniz özel bir alana yüklenir. Taranmış (fotoğraf) reçeteler henüz okunamıyor.
+          e-Nabız veya eczaneden aldığınız PDF reçeteyi seçin. Dosya yalnızca sizin erişebildiğiniz özel bir alana yüklenir. Fotoğraf reçeteler henüz okunamıyor; ilaç adlarını “Elle yaz” ile girebilirsiniz.
         </p>
       </section>
       {error ? <p className="error-text" role="alert">{error}</p> : null}

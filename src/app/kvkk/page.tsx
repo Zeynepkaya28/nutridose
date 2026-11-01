@@ -41,7 +41,7 @@ export default function KvkkPage() {
         <section>
           <h2 className="t-headline">4. Saklama yeri ve aktarım</h2>
           <p>
-            Veriler Avrupa Birliği bölgesindeki (Frankfurt) Supabase altyapısında saklanır; uygulama Vercel üzerinde çalışır. Bu hizmet
+            Veriler Avrupa Birliği bölgesindeki (Frankfurt) Supabase altyapısında saklanır; uygulama Netlify üzerinde çalışır. Bu hizmet
             sağlayıcılar veri işleyen sıfatıyla hareket eder. Verileriniz başka üçüncü kişilerle paylaşılmaz ve pazarlama amacıyla
             kullanılmaz. Yurt dışına aktarım KVKK m.9 kapsamında açık rızanıza dayanır.
           </p>

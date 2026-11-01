@@ -6,10 +6,16 @@ export const metadata = { title: "Giriş" };
 const ERRORS: Record<string, string> = {
   baglanti: "Giriş bağlantısı geçersiz veya süresi dolmuş. Yeni bir bağlantı isteyin.",
   apple: "Apple ile giriş şu anda kullanılamıyor. E-posta ile devam edebilirsiniz.",
+  "baglanti-tarayici":
+    "Bağlantı, isteği yaptığınız tarayıcıdan farklı bir yerde açıldı. Şifre sıfırlama isteğini bu tarayıcıdan tekrar yapın ve bağlantıyı aynı tarayıcıda açın.",
 };
 
-export default async function SignInPage({ searchParams }: { searchParams: Promise<{ next?: string; hata?: string; silindi?: string }> }) {
-  const { next, hata, silindi } = await searchParams;
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; hata?: string; silindi?: string; dogrulandi?: string }>;
+}) {
+  const { next, hata, silindi, dogrulandi } = await searchParams;
   const appleEnabled = process.env.NEXT_PUBLIC_APPLE_SIGNIN_ENABLED === "true";
 
   return (
@@ -29,6 +35,11 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
       {silindi ? (
         <p className="card t-subhead" role="status">
           Hesabınız ve tüm verileriniz silindi.
+        </p>
+      ) : null}
+      {dogrulandi ? (
+        <p className="card t-subhead" role="status">
+          E-posta adresiniz doğrulandı. Şimdi e-posta ve şifrenizle giriş yapabilirsiniz.
         </p>
       ) : null}
       {hata && ERRORS[hata] ? (

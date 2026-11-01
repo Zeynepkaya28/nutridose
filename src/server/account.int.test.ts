@@ -73,7 +73,7 @@ describe("account lifecycle", () => {
     const before = await countRows(user.id);
     expect(Object.values(before).every((n) => n > 0)).toBe(true);
 
-    await deleteAccount(c, admin, user.id);
+    await deleteAccount(c, user.id);
 
     expect(await countRows(user.id)).toEqual(Object.fromEntries(USER_TABLES.map((t) => [t, 0])));
     const files = await admin.storage.from("prescriptions").list(user.id);

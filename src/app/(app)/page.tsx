@@ -5,6 +5,7 @@ import { Icon } from "@/ui/Icon";
 import { ListRow, ListSection } from "@/ui/List";
 import { Disclaimer, LargeTitle } from "@/ui/Nav";
 import { AddButton } from "./_components/AddSheet";
+import { MealSlots } from "./_components/MealSlots";
 
 export const metadata = { title: "Bugün" };
 
@@ -42,28 +43,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
         </Link>
       ) : null}
 
-      <ListSection
-        id="today-meals"
-        header="Bugünkü öğünler"
-        footer={meals.length === 0 ? "Yediklerinizi ekleyin; ilaçlarınızla etkileşimleri hemen kontrol edilsin." : undefined}
-      >
-        {meals.length === 0 ? (
-          <ListRow title="Henüz öğün eklemediniz" icon="fork.knife" iconColor="var(--system-orange)" />
-        ) : (
-          meals.map((meal) => (
-            <ListRow
-              key={meal.id}
-              icon={meal.latestRun?.requiresAlert ? "xmark.octagon.fill" : "fork.knife"}
-              iconColor={meal.latestRun?.requiresAlert ? "var(--system-red)" : "var(--system-orange)"}
-              title={meal.label ?? "Öğün"}
-              subtitle={meal.items.join(", ") || "Kalem yok"}
-              detail={formatTime(meal.eatenAt)}
-              accessory={meal.latestRun ? "chevron" : "none"}
-              href={meal.latestRun ? `/analiz/${meal.latestRun.id}` : undefined}
-            />
-          ))
-        )}
-      </ListSection>
+      <MealSlots meals={meals} />
 
       <ListSection id="today-meds" header="İlaçlarım">
         {active.length === 0 ? (
