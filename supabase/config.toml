@@ -443,8 +443,8 @@ content_path = "./supabase/templates/reauthentication.html"
 project_id = "kpwbmdzogdvjgrkwcahq"
 
 [remotes.production.auth]
-site_url = "https://nutridose.vercel.app"
-additional_redirect_urls = ["https://nutridose.vercel.app/**", "https://nutridose-*-zeynep-beca.vercel.app/**", "nutridose://auth-callback"]
+site_url = "https://nutridose.netlify.app"
+additional_redirect_urls = ["https://nutridose.netlify.app/**", "https://*--nutridose.netlify.app/**", "https://nutridose.vercel.app/**", "https://nutridose-*-zeynep-beca.vercel.app/**", "nutridose://auth-callback"]
 
 [remotes.production.auth.email]
 # One email per address per minute in production (local dev uses 1s).
